@@ -117,8 +117,8 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    Route::prefix('/tutors')->group(function () {
-        Route::middleware('jwt.verify', 'role:admin')->group(function () {
+    Route::middleware('jwt.verify', 'role:admin')->group(function () {
+        Route::prefix('/tutors')->group(function () {
             Route::get('/{id}', 'App\Http\Controllers\v1\Tutor\TutorController@getTutorById');
             Route::post('/', 'App\Http\Controllers\v1\Tutor\TutorsRegistrationController@registerTutor');
             Route::post('/massiveLoad', 'App\Http\Controllers\v1\Tutor\TutorsRegistrationController@registerTutors');
