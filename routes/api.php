@@ -61,7 +61,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/group/{group}', 'App\Http\Controllers\v1\Student\StudentController@getStudentsByGroup');
         });
 
-        Route::middleware('jwt.verify','role:tutor')->group(function(){
+        Route::middleware('jwt.verify','role:admin')->group(function(){
             // Route::get('register/{enrollment}', 'App\Http\Controllers\v1\Student\StudentController@registerStudentByEnrollment');
             Route::get('{enrollment}/checks', 'App\Http\Controllers\v1\Student\StudentController@checksByEnrollment');
             Route::get('{enrollment}/checksByPeriod', 'App\Http\Controllers\v1\Student\StudentController@getChecksByPeriod');
