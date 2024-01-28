@@ -262,7 +262,6 @@ class JustificationController extends Controller
 
     public function getjustificationsByPeriod(Request $request)
     {
-        sleep(3);
         $validator = Validator::make($request->query(), [
             'start' => 'required|date',
             'end' => 'required|date'

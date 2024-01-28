@@ -64,7 +64,6 @@ class ReportController extends Controller
 
     public function getreportsByPeriod(Request $request)
     {
-        sleep(3);
         $validator = Validator::make($request->query(), [
             'start' => 'required|date',
             'end' => 'required|date'
