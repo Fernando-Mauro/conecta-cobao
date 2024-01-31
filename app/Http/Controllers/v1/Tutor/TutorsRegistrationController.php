@@ -145,16 +145,19 @@ class TutorsRegistrationController extends Controller
         }
 
         try {
-
+            $tutors = [];
             foreach ($request->all() as $tutorRequest) {
-                $name = $tutorRequest['nombre'];
-                $phone = $tutorRequest['telefono'];
-                $campus = $tutorRequest['plantel'];
-                $email = $tutorRequest['email'];
-                $password = $tutorRequest['contraseña'];
-                $curp = $tutorRequest['curp'];
-                $this->createTutor($name, $phone, $campus, $email, $password, $curp);
+                $tutors[] = [
+                    'name' => $tutorRequest['nombre'],
+                    'phone' => $tutorRequest['telefono'],
+                    'campus' => $tutorRequest['plantel'],
+                    'email' => $tutorRequest['email'],
+                    'password' => Hash::make($tutorRequest['contraseña']),
+                    'curp' => $tutorRequest['curp'],
+                ];
             }
+
+            Tutor::insert($tutors);
 
             return Response::json([
                 'message' => 'Tutores registrados correctamente',
@@ -165,4 +168,5 @@ class TutorsRegistrationController extends Controller
             ], 400);
         }
     }
+
 }
