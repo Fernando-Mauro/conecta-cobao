@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\RegisterTutorsJob;
 
 class TutorsRegistrationController extends Controller
 {
@@ -139,28 +140,16 @@ class TutorsRegistrationController extends Controller
                 }
             ]
         ]);
-
+    
         if ($validator->fails()) {
             return Response::json(["message" => 'Error en el formato de los datos'], 400);
         }
-
+    
         try {
-            $tutors = [];
-            foreach ($request->all() as $tutorRequest) {
-                $tutors[] = [
-                    'name' => $tutorRequest['nombre'],
-                    'phone' => $tutorRequest['telefono'],
-                    'campus' => $tutorRequest['plantel'],
-                    'email' => $tutorRequest['email'],
-                    'password' => Hash::make($tutorRequest['contraseña']),
-                    'curp' => $tutorRequest['curp'],
-                ];
-            }
-
-            Tutor::insert($tutors);
-
+            RegisterTutorsJob::dispatch($request->all());
+    
             return Response::json([
-                'message' => 'Tutores registrados correctamente',
+                'message' => 'Tutores se están registrando en segundo plano',
             ], 200);
         } catch (\Exception $e) {
             return Response::json([
@@ -168,5 +157,5 @@ class TutorsRegistrationController extends Controller
             ], 400);
         }
     }
-
+    
 }
