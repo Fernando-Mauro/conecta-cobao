@@ -24,36 +24,46 @@ class TutorsRegistrationController extends Controller
     public function createTutor($name, $phone, $campus, $email, $password, $curp)
     {
         try {
-
-            $user = User::create([
-                'name' => $name,
-                'email' => $email,
-                'password' => Hash::make($password)
-            ]);
-            Log::channel('daily')->debug('Usuario creado');
-
-            $role = Role::where('name', 'tutor')->first();
-            $user->assignRole($role);
-
-            $tutor = Tutor::create([
-                'name' => $name,
-                'phone' => $phone,
-                'campus' => $campus,
-                'user_id' => $user->id
-            ]);
-
-            Log::channel('daily')->debug('Tutor creado');
-
-            $student = Student::where('curp', $curp)->first();
-
-            if ($student) {
-                Log::channel('daily')->debug('student encontrado');
-
-                TutorStudent::create([
-                    'tutor_id' => $tutor->id,
-                    'student_id' => $student->id
+            // Verificar si el usuario ya existe
+            $user = User::where('email', $email)->first();
+    
+            if (!$user) {
+                $user = User::create([
+                    'name' => $name,
+                    'email' => $email,
+                    'password' => Hash::make($password)
                 ]);
-                Log::channel('daily')->debug('pivot creado');
+    
+                $role = Role::where('name', 'tutor')->first();
+                $user->assignRole($role);
+            }
+    
+            // Verificar si el tutor ya existe
+            $tutor = Tutor::where('user_id', $user->id)->first();
+    
+            if (!$tutor) {
+                $tutor = Tutor::create([
+                    'name' => $name,
+                    'phone' => $phone,
+                    'campus' => $campus,
+                    'user_id' => $user->id
+                ]);
+            }
+    
+            $student = Student::where('curp', $curp)->first();
+    
+            if ($student) {
+                // Verificar si la relación tutor-estudiante ya existe
+                $tutorStudent = TutorStudent::where('tutor_id', $tutor->id)
+                                            ->where('student_id', $student->id)
+                                            ->first();
+    
+                if (!$tutorStudent) {
+                    TutorStudent::create([
+                        'tutor_id' => $tutor->id,
+                        'student_id' => $student->id
+                    ]);
+                }
             } else {
                 throw new Exception('Estudiante no encontrado');
             }
@@ -69,7 +79,7 @@ class TutorsRegistrationController extends Controller
             }
         }
     }
-
+    
     public function registerTutor(Request $request)
     {
         $validator = Validator::make($request->all(), [
