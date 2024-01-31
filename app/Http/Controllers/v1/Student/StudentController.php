@@ -83,7 +83,7 @@ class StudentController extends Controller
     public function getStudentsByGroup($group): JsonResponse
     {
         $students = Student::where('group', $group)
-            ->selectRaw('id, name as nombre, curp, enrollment, phone as telefono')
+            ->selectRaw('id, name as nombre, curp, enrollment as matricula, phone as telefono')
             ->get();
         return Response::json($students, 200);
     }    
