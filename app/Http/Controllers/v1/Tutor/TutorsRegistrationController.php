@@ -131,14 +131,7 @@ class TutorsRegistrationController extends Controller
             '*.plantel' => 'required|integer',
             '*.email' => 'required|string',
             '*.contraseña' => 'required|string',
-            '*.curp' => [
-                'required',
-                function ($attribute, $value, $fail) {
-                    if (!$this->isValidCurp($value)) {
-                        $fail($attribute . ' es inválido.');
-                    }
-                }
-            ]
+            '*.curp' => 'required|string'
         ]);
     
         if ($validator->fails()) {
