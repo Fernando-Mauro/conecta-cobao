@@ -76,12 +76,15 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('/auth')->group(function () {
         Route::post('login', 'App\Http\Controllers\v1\Auth\AuthController@login');
-        Route::get('user', 'App\Http\Controllers\v1\Auth\AuthController@authUser');
-
+        
         Route::middleware('jwt.verify', 'role:admin')->group(function () {
             Route::post('register', 'App\Http\Controllers\v1\Auth\AuthController@register');
-            Route::post('logout', 'App\Http\Controllers\v1\Auth\AuthController@logout');
         });
+        Route::middleware('jwt.verify', 'role:admin,teacher,tutor')->group(function () {
+            Route::post('logout', 'App\Http\Controllers\v1\Auth\AuthController@logout');
+            Route::get('user', 'App\Http\Controllers\v1\Auth\AuthController@getAuthenticatedUser');
+        });
+
     });
 
     Route::prefix('/justifications')->group(function () {

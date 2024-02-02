@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Log;
 use JWTAuth;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use App\Models\Admin;
+use App\Models\Tutor;
+use App\Models\Teacher;
 
 class AuthController extends Controller
 {
@@ -64,7 +67,7 @@ class AuthController extends Controller
         $role = $user->roles;
 
         $expirationTimeInMinutes = 30 * 24 * 60;
-        $cookie = cookie('jwt', $token, $expirationTimeInMinutes, '/', null, true, true, "None");
+        $cookie = cookie('jwt', $token, $expirationTimeInMinutes, '/', null, getenv('APP_SECURE'), true, "None");
         return response()
             ->json(['message' => 'success', 'role' => $role[0]->name])
             ->withCookie($cookie);
@@ -75,24 +78,60 @@ class AuthController extends Controller
     public function getAuthenticatedUser()
     {
         try {
-            if (!$user = JWTAuth::parseToken()->authenticate()) {
-                    return response()->json(['user_not_found'], 404);
+            if (Auth::check()) {
+                $user = Auth::user();
+                $roles = $user->getRoleNames(); // Esta línea obtiene los nombres de los roles del usuario
+
+                $data = [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ];
+
+                foreach ($roles as $role) {
+                    if ($role === 'admin' || $role === 'teacher' || $role === 'tutor') {
+                        $additionalInfo = $this->getAdditionalInfo($user->id, $role);
+                        $data['phone'] = $additionalInfo->phone;
+                    }
+                }
+
+                return Response::json($data, 200);
+            } else {
+                return Response::json(['message' => 'No se pudo autenticar al usuario'], 401);
             }
-            } catch (Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
-                    return response()->json(['token_expired'], $e->getStatusCode());
-            } catch (Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-                    return response()->json(['token_invalid'], $e->getStatusCode());
-            } catch (Tymon\JWTAuth\Exceptions\JWTException $e) {
-                    return response()->json(['token_absent'], $e->getStatusCode());
+        } catch (\Exception $e) {
+            // manejo de errores
+            return Response::json(['message' => 'Ocurrió un error al obtener los datos del usuario'], 500);
+        }
+    }
+
+
+    private function getAdditionalInfo($userId, $role)
+    {
+        try {
+            switch ($role) {
+                case 'admin':
+                    $admin = Admin::where('user_id', $userId)->select('phone')->first();
+                    return $admin;
+                case 'teacher':
+                    $teacher = Teacher::where('user_id', $userId)->select('phone')->first();
+                    return $teacher;
+                case 'tutor':
+                    $tutor = Tutor::where('user_id', $userId)->select('phone')->first();
+                    return $tutor;
+                default:
+                    return [];
             }
-            return response()->json(compact('user'));
+        } catch (\Exception $e) {
+            // manejo de errores
+            return ['message' => 'Ocurrió un error al obtener la información adicional del usuario'];
+        }
     }
 
     public function logout(Request $request)
     {
         $cookie = Cookie::forget('jwt');
         return response([
-            'Message' => 'sucess'
+            'message' => 'sucess'
         ])->withCookie($cookie);
     }
 }
