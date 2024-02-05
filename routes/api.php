@@ -63,12 +63,16 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware('jwt.verify','role:admin')->group(function(){
             // Route::get('register/{enrollment}', 'App\Http\Controllers\v1\Student\StudentController@registerStudentByEnrollment');
-            Route::get('{enrollment}/checks', 'App\Http\Controllers\v1\Student\StudentController@checksByEnrollment');
             Route::get('{enrollment}/checksByPeriod', 'App\Http\Controllers\v1\Student\StudentController@getChecksByPeriod');
             Route::get('{enrollment}/register_check', 'App\Http\Controllers\v1\Student\StudentCheckController@registerStudentCheckByEnrollment');
         });    
     });
-
+    
+    Route::prefix('/checks')->group(function(){
+        Route::middleware(['jwt.verify', 'role:tutor'])->group(function () {
+            Route::get('/', 'App\Http\Controllers\v1\Student\StudentController@checksByTutor');
+        });
+    });
 
     Route::prefix('telegram/webhooks')->group(function () {
         Route::post('inbound', 'App\Http\Controllers\v1\Telegram\TelegramController@inbound');

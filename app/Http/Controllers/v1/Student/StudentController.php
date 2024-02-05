@@ -55,30 +55,36 @@ class StudentController extends Controller
         return Response::json([$student], 200);
     }
 
-
-
-
-    public function checksByEnrollment($enrollment)
+    public function checksByTutor()
     {
         $user = Auth::user();
-        
-        if(!$user){
-            return Response::json(['message', 'Invalid credentials'], 401);
+
+        if (!$user) {
+            return Response::json(['message' => 'Invalid credentials'], 401);
         };
         $userId = $user->id;
         $tutor = Tutor::where('user_id', $userId)->first();
         Log::channel('daily')->debug($userId);
 
-        $tutorStudent = TutorStudent::where('tutor_id', $tutor->id)->first();
-        
-        $student = Student::where('id', $tutorStudent->student_id)->first();
-        
-        $studentEntryAndExit = Student::with('checkIns', 'checkOuts')->where('id', $student->id)->first();
-        if (!$studentEntryAndExit) {
+        $tutorStudents = TutorStudent::where('tutor_id', $tutor->id)->get();
+
+        $studentsEntryAndExit = [];
+        foreach ($tutorStudents as $tutorStudent) {
+            $student = Student::where('id', $tutorStudent->student_id)->select('name', 'group', 'id')->first();
+
+            $studentEntryAndExit = Student::with('checkIns', 'checkOuts')->where('id', $student->id)->select('created_at', 'name', 'id', 'group')->first();
+            if (!$studentEntryAndExit) {
+                continue;
+            }
+            array_push($studentsEntryAndExit, $studentEntryAndExit);
+        }
+
+        if (empty($studentsEntryAndExit)) {
             return Response::json(['message' => 'Registros no encontrados'], 404);
         }
-        return Response::json([$studentEntryAndExit], 200);
+        return Response::json($studentsEntryAndExit, 200);
     }
+
 
     public function getStudentsByGroup($group): JsonResponse
     {
@@ -86,7 +92,7 @@ class StudentController extends Controller
             ->selectRaw('id, name as nombre, curp, enrollment as matricula, phone as telefono')
             ->get();
         return Response::json($students, 200);
-    }    
+    }
 
 
     public function getChecksByPeriod(Request $request, $enrollment): JsonResponse

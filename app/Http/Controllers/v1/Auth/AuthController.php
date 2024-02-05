@@ -67,7 +67,7 @@ class AuthController extends Controller
         $role = $user->roles;
 
         $expirationTimeInMinutes = 30 * 24 * 60;
-        $cookie = cookie('jwt', $token, $expirationTimeInMinutes, '/', null, getenv('APP_SECURE'), true, "None");
+        $cookie = cookie('jwt', $token, $expirationTimeInMinutes);
         return response()
             ->json(['message' => 'success', 'role' => $role[0]->name])
             ->withCookie($cookie);
