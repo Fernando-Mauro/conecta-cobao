@@ -35,7 +35,7 @@ class TutorsRegistrationController extends Controller
                 Log::channel('daily')->debug('user no encontrado');
                 $user = User::create([
                     'name' => ($name == "NULL") ? "Desconocido" : $name,
-                    'email' => ($email == "NULL") ? "Desconocido" : null,
+                    'email' => ($email == "NULL") ? "Desconocido" : $email,
                     'password' => Hash::make($password)
                 ]);
                 Log::channel('daily')->debug('user creado');
