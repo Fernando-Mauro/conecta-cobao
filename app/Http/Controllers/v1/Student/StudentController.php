@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\v1\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
 use App\Models\Student;
 use App\Models\Tutor;
 use App\Models\TutorStudent;
@@ -86,6 +87,17 @@ class StudentController extends Controller
     }
 
 
+    public function getAllStudentsByCampus()
+    {
+        $user = Auth::user();
+        
+        if(!$user){
+            return Response::json(['message' => 'Invalid credentials'], 401);
+        }
+        $admin = Admin::where('user_id', $user->id)->first();
+        $students = Student::where('campus', $admin->campus)->get();
+        return $students;
+    }
     public function getStudentsByGroup($group): JsonResponse
     {
         $students = Student::where('group', $group)
