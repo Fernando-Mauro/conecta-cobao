@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\v1\Student;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendMessage;
 use App\Models\Student;
 use App\Models\StudentCheckIn;
 use App\Models\StudentCheckOut;
@@ -80,14 +81,10 @@ class StudentCheckController extends Controller
         if ($tutorStudent) {
             $tutor = Tutor::find($tutorStudent->tutor_id);
             if ($tutor) {
-                $name = $student->name;
                 $time = date('H:i');
                 $telegram_chat_id = $tutor->telegram_chat_id;
                 if ($telegram_chat_id) {
-                    Telegram::sendMessage([
-                        'chat_id' => $tutor->telegram_chat_id,
-                        'text' => 'Se ha registrado una ' . $message . ' de ' . $name . ' a las ' . $time . ' horas'
-                    ]);
+                    SendMessage::dispatch($student, $message, $time)->onQueue('messages');
                 }
             }
         }
