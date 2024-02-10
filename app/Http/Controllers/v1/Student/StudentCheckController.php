@@ -41,9 +41,11 @@ class StudentCheckController extends Controller
                 return Response::json(['message' => 'Estudiante no encontrado'], 404);
             }
             if ($type === 'in') {
-                return $this->registerIn($student);
+                $this->registerIn($student);
+                return Response::json(["message" => "Registro y mensaje enviado correctamente"], 200);
             } elseif ($type === 'out') {
-                return $this->registerOut($student);
+                $this->registerOut($student);
+                return Response::json(["message" => "Registro y mensaje enviado correctamente"], 200);
             } else {
                 return Response::json(["message" => "Tipo de registro inválido"], 400);
             }
@@ -89,11 +91,5 @@ class StudentCheckController extends Controller
                 }
             }
         }
-        return Response::json([
-            "name" => $student->name,
-            "group" => $student->group,
-            "enrollment" => $student->enrollment,
-            "campus" => $student->campus
-        ]);
     }
 }
