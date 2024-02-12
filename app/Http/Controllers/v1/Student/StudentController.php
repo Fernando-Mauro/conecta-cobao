@@ -73,7 +73,15 @@ class StudentController extends Controller
         foreach ($tutorStudents as $tutorStudent) {
             $student = Student::where('id', $tutorStudent->student_id)->select('name', 'group', 'id')->first();
 
-            $studentEntryAndExit = Student::with('checkIns', 'checkOuts')->where('id', $student->id)->select('created_at', 'name', 'id', 'group')->first();
+            $studentEntryAndExit = Student::with([
+                'checkIns' => function ($query) {
+                    $query->orderBy('created_at', 'desc')->take(7);
+                },
+                'checkOuts' => function ($query) {
+                    $query->orderBy('created_at', 'desc')->take(7);
+                }
+            ])->where('id', $student->id)->select('created_at', 'name', 'id', 'group')->first();
+
             if (!$studentEntryAndExit) {
                 continue;
             }
@@ -90,8 +98,8 @@ class StudentController extends Controller
     public function getAllStudentsByCampus()
     {
         $user = Auth::user();
-        
-        if(!$user){
+
+        if (!$user) {
             return Response::json(['message' => 'Invalid credentials'], 401);
         }
         $admin = Admin::where('user_id', $user->id)->first();
