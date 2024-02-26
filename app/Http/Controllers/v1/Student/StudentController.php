@@ -5,6 +5,7 @@ namespace App\Http\Controllers\v1\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\Student;
+use App\Models\StudentCheckIn;
 use App\Models\Tutor;
 use App\Models\TutorStudent;
 use App\Traits\StudentTrait;
@@ -138,5 +139,12 @@ class StudentController extends Controller
         }
         Log::channel('daily')->debug('👌');
         return Response::json([$studentEntryAndExit], 200);
+    }
+    public function getLasCheckInById($id){
+        $lastCheckIn = StudentCheckIn::where('student_id', $id)->latest()->first();
+        if(!$lastCheckIn){
+            return Response::json(['message' => 'No existe una entrada registrada para este estudiante'], 404);
+        }
+        return Response::json($lastCheckIn, 200);
     }
 }
