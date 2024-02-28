@@ -1,66 +1,52 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# **Conecta-cobao**
+## _"Revolucionando con tecnología la educación en el estado de Oaxaca."_
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+### **Equipo:** <br>
+* Anai Hernández Peralta <br>
+* Fernando Francisco López Mauro <br>
 
-## About Laravel
+### **¿Qué es conecta-cobao?** <br>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Es una iniciativa que utiliza la tecnologia para agilizar procesos administrativos, brindar mayor seguridad a los estudiantes y ayudar a prevenir la deserción escolar. Permite notificar las entradas y salidas de los estudiantes a los tutores, generar solicitudes de justificantes y crear reportes por parte de los docentes <br>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### **Ventajas de nuestro proyecto** <br>
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+***Seguridad***: Al recibir notificaciones instantáneas sobre las entradas y salidas de los estudiantes, se garantiza una mayor tranquilidad a los padres de familia. <br>
 
-## Learning Laravel
+***Eficiencia***: Porque simplifica los procesos administrativos, facilita la comunicación entre estudiantes, tutores y docentes, y optimiza el uso de recursos. <br>
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+***Escalabilidad***: La plataforma es flexible para expandirse a integrar nuevas funcionalidades y un mayor número de usuarios dependiendo de las necesidades de cada plantel.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### **Nuestra misión** <br>
+**Disminuir** la deserción escolar,
+**optimizar** procesos administrativos y 
+**aumentar** la seguridad de la comunidad estudiantil. <br>
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### **Nuestro objetivo** <br>
+Implementar la plataforma en todos los planteles del COBAO con acceso a Internet y en otros centros educativos de nivel medio superior que lo requieran. <br>
 
-## Laravel Sponsors
+### **Recursos necesarios (Por centro educativo)** <br> 
+* Escáner de códigos QR
+* Computadora o teléfono para registrar las entradas
+* Tarifa mensual del servidor (14USD)
+* Conexión a Internet <br>
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### **¿Qué se puede hacer?** <br>
 
-### Premium Partners
+La plataforma conecta-cobao podrá ser usada por tutores, docentes y personal administrativo de los planteles. Con su usuario y contraseña podrán tener acceso a lo siguiente:
+* ***Tutores (padres de familia):*** Recibir notificaciones instantáneas de las entradas y salidas de sus hijos. Obtener los reportes recientes, el registro histórico de las entradas y salidas además de poder enviar solicitudes de justificantes.
+* ***Docentes:*** Contar con información puntual de sus estudiantes, ver su asistencia al plantel y tener conocimiento de los justificantes existentes.
+* ***Administradores:*** Podrán registrar las entradas y salidas de estudiantes, gestionar los usuarios (editar, crear o borrar), aceptar o rechazar solicitudes de justificantes entre otros. <br>
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### **¿En dónde estamos?** <br>
 
-## Contributing
+En la actualidad, nuestra plataforma está funcionando en el plantel 32 Cuilápam, brindando a tutores, docentes y personal administrativo las funcionalidades descritas en este folleto. Asimismo, estamos proyectando su implementación en los planteles del Colegio de Bachilleres del Estado de Oaxaca ubicados en los Valles Centrales. <br> 
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+* _Nuestra plataforma cuenta con el registro de 1500 alumnos del COBAO plantel 32._ <br>
+* _Actualmente enviamos 3000 mensajes al día a través de Telegram a los tutores._ <br>
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### **Tecnologías utilizadas** <br>
+* React.js <br>
+* Laravel <br>
+* Mysql <br>
+* Cloudways <br>
