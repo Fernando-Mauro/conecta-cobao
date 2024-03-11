@@ -13,14 +13,20 @@ return new class extends Migration
     {
         Schema::create('justifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained(); // Relaciona con la tabla students
-            $table->string('tutor_email');
+            
+            $table->unsignedBigInteger('tutor_id');
+            $table->foreign('tutor_id')->references('id')->on('tutors');
+
+            $table->unsignedBigInteger('student_id');
+            $table->foreign('student_id')->references('id')->on('students');
+            
             $table->string('document_url');
-            $table->foreignId('tutor_id')->constrained();
+
             $table->date('start_date');
             $table->date('end_date');
-            $table->boolean('is_active')->default(true); // Nuevo campo para indicar si está activo
-            $table->boolean('is_approved')->nullable();
+            $table->boolean('active')->default(true);
+            $table->boolean('approved')->nullable();
+            
             $table->timestamps();
         });
     }
