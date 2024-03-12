@@ -13,8 +13,17 @@ return new class extends Migration
     {
         Schema::create('history_messages', function (Blueprint $table) {
             $table->id();
+            
             $table->unsignedBigInteger('message_id');
             $table->foreign('message_id')->references('id')->on('messages');
+            
+            $table->unsignedBigInteger('tutor_id');
+            $table->foreign('tutor_id')->references('id')->on('tutors');
+
+            $table->unsignedBigInteger('student_id');
+            $table->foreign('student_id')->references('id')->on('students');
+
+
             $table->timestamps();
         });
     }
