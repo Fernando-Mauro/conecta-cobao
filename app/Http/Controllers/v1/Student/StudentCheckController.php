@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Telegram\Bot\Laravel\Facades\Telegram;
+use GuzzleHttp\Client;
 
 class StudentCheckController extends Controller
 {
@@ -56,7 +57,7 @@ class StudentCheckController extends Controller
     }
 
 
-    public function registerIn( $student)
+    public function registerIn($student)
     {
         $checkIn = new StudentCheckIn();
         $checkIn->student_id = $student->id;
@@ -65,7 +66,7 @@ class StudentCheckController extends Controller
         return $this->notifyTutor($student, $message);
     }
 
-    public function registerOut( $student)
+    public function registerOut($student)
     {
         $checkOut = new StudentCheckOut();
         $checkOut->student_id = $student->id;
@@ -77,12 +78,18 @@ class StudentCheckController extends Controller
     public function notifyTutor($student, $message)
     {
         $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
-
         if ($tutorStudent) {
             $tutor = Tutor::find($tutorStudent->tutor_id);
             if ($tutor) {
                 $time = date('H:i');
                 $telegram_chat_id = $tutor->telegram_chat_id;
+                $client = new Client();
+                $phone = $tutor->phone;
+                $res = $client->request('POST', getenv('URL_BOT_WHATSAPP'). 'sendMessage/' . $phone, [
+                    'json' => [
+                        'text' => 'Se ha registrado una ' . $message . ' de ' . $student->name . ' a las ' . $time . ' horas'
+                    ]
+                ]);
                 if ($telegram_chat_id) {
                     SendMessage::dispatch($student, $message, $time)->onQueue('messages');
                 }
