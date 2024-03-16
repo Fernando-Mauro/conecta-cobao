@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->integer('campus_number');
             $table->mediumText('address');
-            $table->boolean('active');
+            $table->boolean('active')->default(true);
 
             $table->timestamps();
         });

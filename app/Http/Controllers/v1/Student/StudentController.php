@@ -104,7 +104,7 @@ class StudentController extends Controller
             return Response::json(['message' => 'Invalid credentials'], 401);
         }
         $admin = Admin::where('user_id', $user->id)->first();
-        $students = Student::where('campus', $admin->campus)->select('name', 'group', 'campus', 'enrollment')->get();
+        $students = Student::where('campus_id', $admin->campus_id)->select('name', 'group', 'campus', 'enrollment')->get();
         return Response::json($students, 200);
     }
     public function getStudentsByGroup($group): JsonResponse

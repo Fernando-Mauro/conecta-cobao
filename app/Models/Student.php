@@ -9,15 +9,16 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Student extends Model
 {
-    protected $table = 'students'; // Nombre de la tabla
+    protected $table = 'students';
 
     protected $fillable = [
         'enrollment',
         'name',
         'phone',
         'curp',
-        'group',
-        'campus'
+        'group_id',
+        'campus_id',
+        'user_id'
     ];
 
 

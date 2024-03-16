@@ -3,38 +3,34 @@
 namespace App\Http\Controllers\v1\Teachers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Campus;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
 
 class TeachersRegistrationController extends Controller
 {
-    public function createTeacher($name, $phone, $campus, $email, $password)
+    public function createTeacher($name, $phone, $campusNumber, $email, $password)
     {
-        try {
-            $user = User::create([
-                'name' => $name,
-                'email' => $email,
-                'password' => Hash::make($password)
-            ]);
-            $role = Role::where('name', 'teacher')->first();
-            $user->assignRole($role);
+        $user = User::create([
+            'name' => $name,
+            'email' => $email,
+            'password' => Hash::make($password)
+        ]);
+        $role = Role::where('name', 'teacher')->first();
+        $user->assignRole($role);
 
-            Teacher::create([
-                'name' => $user->name,
-                'phone' => $phone,
-                'campus' => $campus,
-                'user_id' => $user->id
-            ]);
-        } catch (\Exception $e) {
-            return Response::json([
-                'message' => 'Error al enviar el docente'
-            ], 400);
-        }
+        Teacher::create([
+            'name' => $user->name,
+            'phone' => $phone,
+            'campus_id' => Campus::where('campus_number', $campusNumber)->first()->id,
+            'user_id' => $user->id
+        ]);
     }
 
     public function registerTeacher(Request $request)
@@ -54,19 +50,20 @@ class TeachersRegistrationController extends Controller
         try {
             $name = $request->input('name');
             $phone = $request->input('phone');
-            $campus = $request->input('campus');
+            $campusNumber = $request->input('campus');
             $email = $request->input('email');
             $password = $request->input('password');
 
-            $this->createTeacher($name, $phone, $campus, $email, $password);
+            $this->createTeacher($name, $phone, $campusNumber, $email, $password);
 
             return Response::json([
                 'message' => 'Docente registrado correctamente',
             ], 200);
 
         } catch (\Exception $e) {
+            Log::channel('daily')->error('Error al crear el docente: ' . $e->getMessage());
             return Response::json([
-                'message' => 'Error al enviar el docente'
+                'message' => 'Error al crear el docente: ' . $e->getMessage()
             ], 400);
         }
     }
@@ -90,18 +87,19 @@ class TeachersRegistrationController extends Controller
             foreach ($request->all() as $teachersRequest) {
                 $name = $teachersRequest['nombre'];
                 $phone = $teachersRequest['telefono'];
-                $campus = $teachersRequest['plantel'];
+                $campusNumber = $teachersRequest['plantel'];
                 $email = $teachersRequest['email'];
                 $password = $teachersRequest['contraseña'];
-                $this->createTeacher($name, $phone, $campus, $email, $password);
+                $this->createTeacher($name, $phone, $campusNumber, $email, $password);
             }
 
             return Response::json([
                 'message' => 'Docentes registrados correctamente',
             ], 200);
         } catch (\Exception $e) {
+            Log::channel('daily')->error('Error al crear los docentes: ' . $e->getMessage());
             return Response::json([
-                'message' => 'Error al enviar los docentes'
+                'message' => 'Error al crear los docentes: ' . $e->getMessage()
             ], 400);
         }
     }

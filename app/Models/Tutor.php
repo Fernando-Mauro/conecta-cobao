@@ -18,7 +18,7 @@ class Tutor extends Model
         'name',
         'phone',
         'telegram_chat_id',
-        'campus',
+        'campus_id',
         'active',
         'user_id'
     ];

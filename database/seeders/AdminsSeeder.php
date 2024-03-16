@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Admin;
+use App\Models\Campus;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -38,7 +39,7 @@ class AdminsSeeder extends Seeder
                 'name' => $user->name,
                 'phone' => $admin['telefono'],
                 'email' => $admin['correo'],
-                'campus' => $admin['campus'],
+                'campus_id' => Campus::where('campus_number', $admin['campus'])->first()->id,
                 'user_id' => $user->id
             ]);
             

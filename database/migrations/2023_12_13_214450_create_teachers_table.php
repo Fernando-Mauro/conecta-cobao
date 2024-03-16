@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('phone');
+            
             $table->unsignedBigInteger('campus_id');
             $table->foreign('campus_id')->references('id')->on('campus');
+
             $table->boolean('active')->default(true);
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users');

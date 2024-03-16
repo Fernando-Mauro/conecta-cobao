@@ -4,6 +4,7 @@ namespace App\Http\Controllers\v1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\Campus;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -30,9 +31,10 @@ class AdminRegistrationController extends Controller
                 'name' => $user->name,
                 'phone' => $phone,
                 'email' => $email,
-                'campus' => $campus,
+                'campus_id' => Campus::where('campus_number', $campus)->first()->id,
                 'user_id' => $user->id
             ]);
+            Log::channel('daily')->info('El admin se creó');
         } catch (\Exception $e) {
             return Response::json([
                 'message' => 'Error al enviar el administrador'
@@ -88,8 +90,6 @@ class AdminRegistrationController extends Controller
         }
 
         try {
-
-
             foreach ($request->all() as $adminsRequest) {
                 $name = $adminsRequest['nombre'];
                 $phone = $adminsRequest['telefono'];

@@ -19,7 +19,8 @@ return new class extends Migration
 
             $table->boolean('active')->default(true);
             $table->string('curp')->unique();
-            $table->integer('campus');
+            $table->unsignedBigInteger('campus_id');
+            $table->foreign('campus_id')->references('id')->on('campus');
             $table->timestamps();
         });
     }

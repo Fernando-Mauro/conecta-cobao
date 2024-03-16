@@ -31,9 +31,24 @@ class AdminController extends Controller
     }
     public function getAllAdmins()
     {
-        $admins = Admin::where('active', true)->select('id', 'name', 'email', 'campus')->get();
+        $admins = Admin::where('active', true)
+            ->with('campus:id,campus_number,name')  // Carga la relación 'campus'
+            ->select('id', 'name', 'email', 'campus_id')
+            ->get()
+            ->map(function ($admin) {  // Transforma cada admin
+                return [
+                    'id' => $admin->id,
+                    'nombre' => $admin->name,
+                    'correo' => $admin->email,
+                    'nombre de plantel' => $admin->campus->name,
+                    'número de plantel' => $admin->campus->campus_number,
+                ];
+            });
+    
         return Response::json($admins, 200);
     }
+    
+    
 
     public function getAdminById($id)
     {

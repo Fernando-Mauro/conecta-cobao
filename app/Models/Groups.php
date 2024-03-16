@@ -5,20 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Teacher extends Model
+class Groups extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'name',
-        'phone',
-        'user_id',
-        'active',
-        'campus_id'
+        'key',
+        'campus_id',
+        'active'
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    public $timestamps = true;
 }

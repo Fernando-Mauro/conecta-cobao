@@ -15,10 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('phone');
-            $table->integer('campus');
+            
+            $table->unsignedBigInteger('campus_id');
+            $table->foreign('campus_id')->references('id')->on('campus');
+
             $table->string('telegram_chat_id')->nullable();
+
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users');
+            
             $table->boolean('active')->default(true);
             $table->timestamps();
         });
