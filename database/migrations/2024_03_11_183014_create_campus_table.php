@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('history_messages', function (Blueprint $table) {
+        Schema::create('campus', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('message_id');
-            $table->foreign('message_id')->references('id')->on('messages');
+            $table->string('name');
+            $table->integer('campus_number');
+            $table->mediumText('address');
+            $table->boolean('active');
+
             $table->timestamps();
         });
     }
@@ -24,10 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('history_messages', function (Blueprint $table) {
-            $table->dropForeign(['message_id']); // Elimina la clave foránea
-        });
-        
-        Schema::dropIfExists('history_messages');
+        Schema::dropIfExists('campus');
     }
 };

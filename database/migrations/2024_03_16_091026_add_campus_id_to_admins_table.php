@@ -11,16 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('teachers', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('phone');
+        Schema::table('admins', function (Blueprint $table) {
             $table->unsignedBigInteger('campus_id');
             $table->foreign('campus_id')->references('id')->on('campus');
-            $table->boolean('active')->default(true);
-            $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('id')->on('users');
-            $table->timestamps();
         });
     }
 
@@ -29,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('teachers');
+        Schema::table('admins', function (Blueprint $table) {
+            //
+        });
     }
 };

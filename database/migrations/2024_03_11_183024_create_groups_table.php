@@ -11,15 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('teachers', function (Blueprint $table) {
+        Schema::create('groups', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('phone');
+            
+            // If is like secondary, the name is: 1
+            $table->integer('name');
+            
+            // The key is: 'A', can be nullable like in high school, only the name is 303
+            $table->string('key')->nullable();
+            
             $table->unsignedBigInteger('campus_id');
             $table->foreign('campus_id')->references('id')->on('campus');
-            $table->boolean('active')->default(true);
-            $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('id')->on('users');
+
+            $table->boolean('active');
+        
             $table->timestamps();
         });
     }
@@ -29,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('teachers');
+        Schema::dropIfExists('groups');
     }
 };

@@ -9,36 +9,34 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('justifications', function (Blueprint $table) {
+        Schema::create('history_messages', function (Blueprint $table) {
             $table->id();
+            
+            $table->unsignedBigInteger('message_id');
+            $table->foreign('message_id')->references('id')->on('messages');
             
             $table->unsignedBigInteger('tutor_id');
             $table->foreign('tutor_id')->references('id')->on('tutors');
 
             $table->unsignedBigInteger('student_id');
             $table->foreign('student_id')->references('id')->on('students');
-            
-            $table->string('document_url');
 
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->boolean('active')->default(true);
-            $table->boolean('approved')->nullable();
-            
+
             $table->timestamps();
         });
     }
 
-    public function down()
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
-
-        Schema::table('justifications', function (Blueprint $table) {
-            $table->dropForeign(['tutor_id']);
-            $table->dropForeign(['student_id']);
+        Schema::table('history_messages', function (Blueprint $table) {
+            $table->dropForeign(['message_id']); // Elimina la clave foránea
         });
         
-        Schema::dropIfExists('justifications');
+        Schema::dropIfExists('history_messages');
     }
 };

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('enrollment')->unique();
             $table->string('name');
             $table->string('phone');
-            $table->integer('group');
+
             $table->boolean('active')->default(true);
             $table->string('curp')->unique();
             $table->integer('campus');
