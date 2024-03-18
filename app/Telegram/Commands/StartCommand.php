@@ -8,13 +8,12 @@ use Telegram\Bot\Keyboard\Keyboard;
 
 class StartCommand extends Command
 {
-    public string $name = 'start';
-    public string $description = 'Inicie el registro de su número con este comando';
+    protected string $name = 'start';
+    protected string $description = 'Inicie el registro de su número con este comando';
+    protected array $aliases = ['comenzar']; 
 
     public function handle()
     {
-        Log::channel('daily')->info('Recibiendo un comando start D:');
-
         $keyboard = Keyboard::make()
             ->inline()
             ->row(

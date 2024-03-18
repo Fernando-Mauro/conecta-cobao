@@ -25,7 +25,7 @@ class TelegramController extends Controller
     public function inbound(Request $request)
     {
         $update = Telegram::commandsHandler(true);
-
+        
         if ($update->isType('my_chat_member')) {
             Log::channel('daily')->debug('Mensaje rarito');
         } else {

@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\v1\Teachers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
+use App\Models\Campus;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 
@@ -14,10 +17,20 @@ class TeachersController extends Controller
     //
     public function getTeachers()
     {
-        $activeTeachers = Teacher::where('active', true)->select('id', 'name', 'phone', 'campus')->get();
+        $user = Auth::user();
+        $admin = Admin::where('user_id', $user->id)->first();
+        $campus = Campus::where('id', $admin->campus_id)->first();
+        if (!$campus) {
+            return Response::json(['message' => 'Campus no encontrado'], 404);
+        }
+        $activeTeachers = Teacher::where('active', true)->where('campus_id', $admin->campus_id)->select('id', 'name', 'phone')->get();
+        foreach ($activeTeachers as $teacher) {
+            $teacher->campus = $campus->campus_number;
+        }
 
         return Response::json($activeTeachers, 200);
     }
+
 
     public function getTeacherById($id)
     {
@@ -55,14 +68,14 @@ class TeachersController extends Controller
         }
 
         $teacher = Teacher::where('id', $id)->first();
-        
+
         if (!$teacher) {
             return Response::json(['message' => 'Docente no encontrado']);
         }
 
         $teacher->update($request->only('name', 'phone'));
         $user = User::where('id', $teacher->user_id);
-        
+
         if (!$user) {
             return Response::json(['message' => 'Usuario de docente no encontrado']);
         }
@@ -75,17 +88,17 @@ class TeachersController extends Controller
     public function deleteTeacherById($id)
     {
         $teacher = Teacher::where('id', $id)->first();
-        if(!$teacher){
+        if (!$teacher) {
             return Response::json(['message' => 'Docente no encontrado'], 404);
         }
         $user = User::where('id', $teacher->user_id);
-        
-        if(!$user){
+
+        if (!$user) {
             return Response::json(['message' => 'Usuario del docente no encontrado'], 404);
         }
         $teacher->delete();
         $user->delete();
-        
+
         return Response::json(['message' => 'Docente eliminado correctamente'], 200);
     }
 }

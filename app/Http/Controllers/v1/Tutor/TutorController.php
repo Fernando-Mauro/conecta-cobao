@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\v1\Tutor;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
+use App\Models\Campus;
+use App\Models\Groups;
 use App\Models\Student;
 use App\Models\Tutor;
 use App\Models\TutorStudent;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 
@@ -35,12 +39,22 @@ class TutorController extends Controller
 
     public function getTutorsByGroup($group)
     {
-        $students = Student::where('group', $group)->select('id')->get();
-        $tutorIds = TutorStudent::whereIn('student_id', $students->pluck('id'))->select('tutor_id')->distinct()->get();
-        $tutors = Tutor::whereIn('id', $tutorIds->pluck('tutor_id'))->select('id', 'name', 'phone', 'campus')->get();
-
+        $user = Auth::user();
+        $admin = Admin::where('user_id', $user->id)->first();
+        $group = Groups::where('name', $group)->where('campus_id', $admin->campus_id)->first();
+        if($group){
+            $students = Student::where('group_id', $group->id)->select('id')->get();
+            $tutorIds = TutorStudent::whereIn('student_id', $students->pluck('id'))->select('tutor_id')->distinct()->get();
+            $tutors = Tutor::whereIn('id', $tutorIds->pluck('tutor_id'))->select('id', 'name', 'phone')->get();
+            $campus = Campus::where('id', $admin->campus_id)->select('campus_number')->first();
+            foreach ($tutors as $tutor) {
+                $tutor->campus = $campus->campus_number;
+            }
+        }
+    
         return Response::json($tutors);
     }
+    
 
     public function editTutorById($id, Request $request){
         $validator = Validator::make($request->all(), [
