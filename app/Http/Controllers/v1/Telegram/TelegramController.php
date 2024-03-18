@@ -8,8 +8,10 @@ use App\Models\ConversationStatus;
 use App\Models\Student;
 use App\Models\Tutor;
 use App\Models\TutorStudent;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Telegram\Bot\Laravel\Facades\Telegram;
+use JWTAuth;
 
 class TelegramController extends Controller
 {
@@ -25,9 +27,9 @@ class TelegramController extends Controller
     public function inbound(Request $request)
     {
         $update = Telegram::commandsHandler(true);
-        
+
         if ($update->isType('my_chat_member')) {
-            Log::channel('daily')->debug('Mensaje rarito');
+            Log::channel('daily')->debug('Mensaje raro');
         } else {
             if ($update->isType('callback_query')) {
                 $callbackData = $update->getCallbackQuery()->getData();
@@ -38,7 +40,7 @@ class TelegramController extends Controller
                     $this->setDeleteState($update);
                 }
             } else {
-                Log::channel('daily')->debug('Mensaje normalito');
+                Log::channel('daily')->debug('Mensaje normal');
                 $chatId = $update->getMessage()->getChat()->getId();
 
                 // Busca el estado actual en la base de datos
@@ -46,21 +48,24 @@ class TelegramController extends Controller
 
                 if ($conversation) {
                     $currentState = $conversation->conversation_state;
-
-                    // Aplica lógica según el estado actual
-                    if ($currentState === 'registro') {
-                        // Lógica para procesar un mensaje en estado "registro"
-                        $enrollment = $update->getMessage()->getText();
-                        $this->handleRegistration($enrollment, $chatId);
-                    } elseif ($currentState === 'borrar') {
-                        // Lógica para procesar un mensaje en estado "borrar"
-                        $enrollment = $update->getMessage()->getText();
-                        $this->handleDeletion($enrollment, $chatId);
-                    } else {
-                        Telegram::sendMessage([
-                            'chat_id' => $chatId,
-                            'text' => 'Lo siento, prueba con otra palabra o comando'
-                        ]);
+                    switch ($currentState) {
+                        case 'registro':
+                            $enrollment = $update->getMessage()->getText();
+                            $this->setEnrollmentToConversationStatus($enrollment, $chatId);
+                            break;
+                        case 'password':
+                            $password = $update->getMessage()->getText();
+                            $this->handleRegistration($chatId, $password);
+                            break;
+                        case 'borrar':
+                            $enrollment = $update->getMessage()->getText();
+                            $this->handleDeletion($enrollment, $chatId);
+                            break;
+                        default:
+                            Telegram::sendMessage([
+                                'chat_id' => $chatId,
+                                'text' => 'Lo siento, prueba con otra palabra o comando'
+                            ]);
                     }
                 }
             }
@@ -77,7 +82,8 @@ class TelegramController extends Controller
             // Si no se encuentra un registro, crea uno con un estado inicial (por ejemplo, "none")
             $conversation = new ConversationStatus();
             $conversation->chat_id = $chatId;
-            $conversation->conversation_state = null; // Estado inicial
+            $conversation->conversation_state = null;
+            $conversation->enrollment = null;
             $conversation->save();
         }
 
@@ -113,32 +119,68 @@ class TelegramController extends Controller
         ]);
     }
 
-    public function handleRegistration($enrollment, $chatId)
+    public function handleRegistration($chatId, $password)
     {
-        if ($this->isValidEnrollment($enrollment)) {
-            $student = Student::where('enrollment', $enrollment)->first();
+        Log::channel('daily')->info('Inicio del registro');
 
-            if ($student) {
-                $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
+        $conversation = $this->getConversationStatus($chatId);
+        Log::channel('daily')->info('Estado de la conversación obtenido: ' . json_encode($conversation));
 
-                if ($tutorStudent) {
-                    $tutor = Tutor::find($tutorStudent->tutor_id);
+        $student = Student::where('enrollment', $conversation->enrollment)->first();
+        Log::channel('daily')->info('Estudiante obtenido: ' . json_encode($student));
 
-                    if ($tutor) {
+        if ($student) {
+            $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
+            Log::channel('daily')->info('Tutor del estudiante obtenido: ' . json_encode($tutorStudent));
+
+            if ($tutorStudent) {
+                $tutor = Tutor::where('id', $tutorStudent->tutor_id)->first();
+                Log::channel('daily')->info('Tutor obtenido: ' . json_encode($tutor));
+
+                if ($tutor) {
+                    $userTutor = User::where('id', $tutor->user_id)->first();
+                    Log::channel('daily')->info('Usuario del tutor obtenido: ' . json_encode($userTutor));
+
+                    if (JWTAuth::attempt(['email' => $userTutor->email, 'password' => $password])) {
                         $tutor->telegram_chat_id = $chatId;
                         $tutor->save();
-
                         $message = 'Número telefónico asignado correctamente.' . "\n" . 'A partir de este momento recibirás notificaciones sobre la entrada y salida del estudiante.';
                         $this->setConversationStatus($chatId, null);
+                        Log::channel('daily')->info('Autenticación exitosa y chatId asignado al tutor');
                     } else {
-                        $message = 'No se pudo encontrar un tutor activo para este estudiante.';
+                        $message = 'El codigo de seguridad es incorrecto, por favor intenta de nuevo';
+                        Log::channel('daily')->info('Falló la autenticación');
                     }
                 } else {
-                    $message = 'No se pudo encontrar una relación de tutor para este estudiante.';
+                    $message = 'No se pudo encontrar un tutor activo para este estudiante.';
+                    Log::channel('daily')->info('No se encontró un tutor activo');
                 }
             } else {
-                $message = 'No se encontró ningún estudiante con la matrícula proporcionada.';
+                $message = 'No se pudo encontrar una relación de tutor para este estudiante.';
+                Log::channel('daily')->info('No se encontró una relación de tutor');
             }
+        } else {
+            $message = 'No se encontró ningún estudiante con la matrícula proporcionada.';
+            Log::channel('daily')->info('No se encontró un estudiante');
+        }
+
+        Telegram::sendMessage([
+            'chat_id' => $chatId,
+            'text' => $message
+        ]);
+
+        Log::channel('daily')->info('Mensaje enviado: ' . $message);
+    }
+
+
+    public function setEnrollmentToConversationStatus($enrollment, $chatId)
+    {
+        if ($this->isValidEnrollment($enrollment)) {
+            $conversation = $this->getConversationStatus($chatId);
+            $conversation->enrollment = $enrollment;
+            $conversation->save();
+            $this->setConversationStatus($chatId, 'password');
+            $message = 'Estamos a punto de terminar! Por favor escriba su código de seguridad';
         } else {
             $message = 'La matrícula proporcionada no es válida 😠' . "\n" . 'Ingresa de nuevo la matrícula.';
         }
@@ -148,8 +190,6 @@ class TelegramController extends Controller
             'text' => $message
         ]);
     }
-
-
     public function handleDeletion($enrollment, $chatId)
     {
         // Busca al estudiante por la matrícula proporcionada

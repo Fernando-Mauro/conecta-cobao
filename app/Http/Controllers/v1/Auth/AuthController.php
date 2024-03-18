@@ -73,8 +73,6 @@ class AuthController extends Controller
             ->withCookie($cookie);
     }
 
-
-
     public function getAuthenticatedUser()
     {
         try {

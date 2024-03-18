@@ -12,7 +12,8 @@ class ConversationStatus extends Model
 
     protected $fillable = [
         'chat_id',
-        'conversation_state'
+        'conversation_state',
+        'enrollment'
     ];
 
 
