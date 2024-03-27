@@ -24,7 +24,10 @@ Route::prefix('v1')->group(function () {
             Route::post('/', 'App\Http\Controllers\v1\Admin\AdminRegistrationController@registerAdmin');
             Route::post('/massiveLoad', 'App\Http\Controllers\v1\Admin\AdminRegistrationController@registerAdmins');
             Route::get('/', 'App\Http\Controllers\v1\Admin\AdminController@getAllAdmins');
-           
+            
+            Route::get('/getGroupsBySemester/{semester}', 'App\Http\Controllers\v1\Admin\AdminController@getGroups');
+
+            // Get, edit and delete admin
             Route::prefix('/{id}')->group(function(){
                 Route::get('/', 'App\Http\Controllers\v1\Admin\AdminController@getAdminById');
                 Route::patch('/', 'App\Http\Controllers\v1\Admin\AdminController@editAdminById');

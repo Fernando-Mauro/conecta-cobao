@@ -123,12 +123,17 @@ class StudentController extends Controller
     
 
 
-    public function getStudentsByGroup($group): JsonResponse
+    public function getStudentsByGroup($groupId): JsonResponse
     {
-        $user = Auth::user();
-        $admin = Admin::where('user_id', $user->id)->first();
-        // campus_id
-        $group = Groups::where('name', $group)->where('campus_id', $admin->campus_id)->first();
+        $userId = Auth::id();
+        
+        if(!$userId){
+            return Response::json(['message' => 'No estas autenticado'], 403);
+        }
+
+        $admin = Admin::where('user_id', $userId)->first();
+
+        $group = Groups::where('id', $groupId)->where('campus_id', $admin->campus_id)->first();
         if ($group) {
             $students = Student::where('group_id', $group->id)
                 ->selectRaw('id, name as nombre, curp, enrollment as matricula, phone as telefono')

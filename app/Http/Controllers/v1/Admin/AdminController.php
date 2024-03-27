@@ -100,8 +100,7 @@ class AdminController extends Controller
         $admin->delete();
         return Response::json(['message' => 'Admin eliminado correctamente'], 200);
     }
-
-    public function getGroupsByAdmin()
+    public function getGroups($semester)
     {
         $userId = Auth::id();
         
@@ -109,10 +108,18 @@ class AdminController extends Controller
             return Response::json(['message' => 'No se encuentra autenticado']);
         }
         $admin = Admin::where('user_id', $userId)->first();
-
+    
         $groups = Groups::where('campus_id',$admin->campus_id)->get();
-
-        return $groups;
+    
+        $groupsFilter = [];
+        foreach($groups as $group)
+        {
+            // Verificar si el nombre del grupo comienza con el semestre
+            if(strpos($group->name, $semester) === 0)
+                array_push($groupsFilter, $group);
+        }
+        
+        return Response::json($groupsFilter, 200);
     }
-
+    
 }

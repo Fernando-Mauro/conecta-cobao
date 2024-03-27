@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
-use App\Jobs\RegisterTutorsJob;
+// use App\Jobs\RegisterTutorsJob;
 
 class RegisterTutorsJob implements ShouldQueue
 {
