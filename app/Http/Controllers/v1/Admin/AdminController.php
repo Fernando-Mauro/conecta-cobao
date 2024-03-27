@@ -4,6 +4,7 @@ namespace App\Http\Controllers\v1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\Groups;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Tutor;
@@ -11,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -47,8 +49,6 @@ class AdminController extends Controller
     
         return Response::json($admins, 200);
     }
-    
-    
 
     public function getAdminById($id)
     {
@@ -100,4 +100,19 @@ class AdminController extends Controller
         $admin->delete();
         return Response::json(['message' => 'Admin eliminado correctamente'], 200);
     }
+
+    public function getGroupsByAdmin()
+    {
+        $userId = Auth::id();
+        
+        if(!$userId){
+            return Response::json(['message' => 'No se encuentra autenticado']);
+        }
+        $admin = Admin::where('user_id', $userId)->first();
+
+        $groups = Groups::where('campus_id',$admin->campus_id)->get();
+
+        return $groups;
+    }
+
 }

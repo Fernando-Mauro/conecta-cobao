@@ -24,9 +24,13 @@ Route::prefix('v1')->group(function () {
             Route::post('/', 'App\Http\Controllers\v1\Admin\AdminRegistrationController@registerAdmin');
             Route::post('/massiveLoad', 'App\Http\Controllers\v1\Admin\AdminRegistrationController@registerAdmins');
             Route::get('/', 'App\Http\Controllers\v1\Admin\AdminController@getAllAdmins');
-            Route::get('/{id}', 'App\Http\Controllers\v1\Admin\AdminController@getAdminById');
-            Route::patch('/{id}', 'App\Http\Controllers\v1\Admin\AdminController@editAdminById');
-            Route::delete('/{id}', 'App\Http\Controllers\v1\Admin\AdminController@deleteAdminById');
+           
+            Route::prefix('/{id}')->group(function(){
+                Route::get('/', 'App\Http\Controllers\v1\Admin\AdminController@getAdminById');
+                Route::patch('/', 'App\Http\Controllers\v1\Admin\AdminController@editAdminById');
+                Route::delete('/', 'App\Http\Controllers\v1\Admin\AdminController@deleteAdminById');
+            });
+
         });
     });
 
