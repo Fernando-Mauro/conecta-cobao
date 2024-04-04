@@ -85,12 +85,12 @@ class StudentCheckController extends Controller
                 $telegram_chat_id = $tutor->telegram_chat_id;
                 $client = new Client();
                 $phone = $tutor->phone;
-                $res = $client->request('POST', getenv('URL_BOT_WHATSAPP'). 'envio/', [
-                    'json' => [
-                        'numero' => '521'.$phone,
-                        'mensaje' => 'Se ha registrado una ' . $message . ' de ' . $student->name . ' a las ' . $time . ' horas'
-                    ]
-                ]);
+                // $res = $client->request('POST', getenv('URL_BOT_WHATSAPP'). 'envio/', [
+                //     'json' => [
+                //         'numero' => '521'.$phone,
+                //         'mensaje' => 'Se ha registrado una ' . $message . ' de ' . $student->name . ' a las ' . $time . ' horas'
+                //     ]
+                // ]);
                 if ($telegram_chat_id) {
                     SendMessage::dispatch($student, $message, $time)->onQueue('messages');
                 }
