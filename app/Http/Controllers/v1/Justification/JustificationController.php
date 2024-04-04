@@ -192,10 +192,12 @@ class JustificationController extends Controller
         $observations = $request->input('observation') == '' ? '' : "Observaciones: {$request->input('observation')}";
 
         // FIXME: Corregir en caso de que no exista el chat_id
-        // // Telegram::sendMessage([
-        // //     'chat_id' => $tutor->telegram_chat_id,
-        // //     'text' => "{$message} \n {$observations}",
-        // // ]);
+        if($tutor->telegram_chat_id){
+            Telegram::sendMessage([
+                'chat_id' => $tutor->telegram_chat_id,
+                'text' => "{$message} \n {$observations}",
+            ]);
+        }
 
         // Construir la respuesta
         $data = [
