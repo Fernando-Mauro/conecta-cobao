@@ -150,8 +150,8 @@ class JustificationController extends Controller
             'document_url' => $justification->document_url,
             'start_date' => $justification->start_date,
             'end_date' => $justification->end_date,
-            'is_approved' => $justification->is_approved,
-            'is_active' => $justification->is_active,
+            'is_approved' => $justification->approved,
+            'is_active' => $justification->active,
             'created_at' => $justification->created_at,
             'updated_at' => $justification->updated_at,
         ];
@@ -176,19 +176,19 @@ class JustificationController extends Controller
         }
 
         // Verificar si la justificación ya ha sido aprobada o desaprobada
-        if ($justification->is_approved !== null) {
+        if ($justification->approved !== null) {
             return response()->json(['error' => 'La justificación ya ha sido procesada'], 400);
         }
 
         // Actualizar el estado de aprobación basado en el valor de 'approve'
-        $justification->is_approved = $request->input('approve');
+        $justification->approved = $request->input('approve');
         $justification->save();
 
         // Obtener datos relacionados para la respuesta
         $student = $justification->student;
         $tutor = $justification->tutor;
 
-        $message = $justification->is_approved === true ? 'Ha sido aceptada la solicitud de su justificante, pasar a recogerlo a la direccion con su nombre y matricula' : 'Su solicitud ha sido rechazada';
+        $message = $justification->approved === true ? 'Ha sido aceptada la solicitud de su justificante, pasar a recogerlo a la direccion con su nombre y matricula' : 'Su solicitud ha sido rechazada';
         $observations = $request->input('observation') == '' ? '' : "Observaciones: {$request->input('observation')}";
 
         // FIXME: Corregir en caso de que no exista el chat_id
@@ -208,8 +208,8 @@ class JustificationController extends Controller
             'document_url' => $justification->document_url,
             'start_date' => $justification->start_date,
             'end_date' => $justification->end_date,
-            'is_approved' => $justification->is_approved,
-            'is_active' => $justification->is_active,
+            'is_approved' => $justification->approved,
+            'is_active' => $justification->active,
             'created_at' => $justification->created_at,
             'updated_at' => $justification->updated_at,
         ];
@@ -222,7 +222,7 @@ class JustificationController extends Controller
         $sixMonthsAgo = \Carbon\Carbon::now()->subMonths(6);
 
         $justifications = Justification::where('student_id', $id)
-            ->where('is_approved', true)
+            ->where('approved', true)
             ->where('start_date', '>=', $sixMonthsAgo)
             ->get();
 
@@ -246,12 +246,12 @@ class JustificationController extends Controller
             'student_name' => $student->name,
             'tutor_id' => $tutor->id,
             'tutor_name' => $tutor->name,
-            'tutor_email' => $justification->tutor_email,
+            // 'tutor_email' => $justification->tutor_email,
             'document_url' => $justification->document_url,
             'start_date' => $justification->start_date,
             'end_date' => $justification->end_date,
-            'is_approved' => $justification->is_approved,
-            'is_active' => $justification->is_active,
+            'is_approved' => $justification->approved,
+            'is_active' => $justification->active,
             'created_at' => $justification->created_at,
             'updated_at' => $justification->updated_at,
         ];
@@ -273,7 +273,7 @@ class JustificationController extends Controller
         $start = $request->query('start');
         $end = $request->query('end');
 
-        $justifications = Justification::whereBetween('created_at', [$start, $end])->where('is_approved', true)->select('id', 'student_id', 'document_url', 'created_at', 'start_date', 'end_date')->get();
+        $justifications = Justification::whereBetween('created_at', [$start, $end])->where('approved', true)->select('id', 'student_id', 'document_url', 'created_at', 'start_date', 'end_date')->get();
 
 
         $justifications = $justifications->map(function ($report) {
