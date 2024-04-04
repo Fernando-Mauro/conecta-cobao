@@ -97,6 +97,10 @@ Route::prefix('v1')->group(function () {
             Route::get('user', 'App\Http\Controllers\v1\Auth\AuthController@getAuthenticatedUser');
         });
 
+        Route::middleware('jwt.verify')->group(function () {
+            Route::post('resetPassword', 'App\Http\Controllers\v1\Auth\AuthController@resetPassword');
+        });
+
     });
 
     Route::prefix('/justifications')->group(function () {

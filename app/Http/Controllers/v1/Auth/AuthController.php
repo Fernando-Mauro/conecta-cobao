@@ -132,4 +132,32 @@ class AuthController extends Controller
             'message' => 'sucess'
         ])->withCookie($cookie);
     }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'oldPassword' => 'required|string|min:6',
+            'newPassword' => 'required|string|min:6'
+        ]);
+
+        if($validator->fails()){
+            return Response::json(['message' => $validator->errors()->toJson()], 400);
+        }
+
+        $userId = Auth::id();
+        
+        $user = User::where('id', $userId)->first();
+
+        if ($user) {
+            if (Hash::check($request->get('oldPassword'), $user->password)) {
+                $user->password = Hash::make($request->get('newPassword'));
+                $user->save();
+                return Response::json(['message' => 'Contraseña actualizada correctamente'], 200);
+            } else {
+                return Response::json(['message' => 'La contraseña antigua no es correcta'], 400);
+            }
+        } else {
+            return Response::json(['message' => 'No se encontró el usuario'], 404);
+        }
+    }
 }
