@@ -59,13 +59,12 @@ class JustificationController extends Controller
         // Crear la justificación
         $justification = new Justification([
             'student_id' => $student->id,
-            'tutor_email' => $request->input('email'),
             'document_url' => $request->input('officialLetterUrl'),
             'tutor_id' => $tutor->id,
             'start_date' => $request->input('start'),
             'end_date' => $request->input('end'),
-            'is_active' => true, // Puedes personalizar esto según tus necesidades
-            'is_approved' => null, // Puedes establecer esto como nulo por defecto
+            'cctive' => true, // Puedes personalizar esto según tus necesidades
+            'approved' => null, // Puedes establecer esto como nulo por defecto
         ]);
 
         // Guardar la justificación en la base de datos
