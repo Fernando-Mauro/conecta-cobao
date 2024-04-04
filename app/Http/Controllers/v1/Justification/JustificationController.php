@@ -93,7 +93,7 @@ class JustificationController extends Controller
             return response()->json(['error' => 'Error en el formato de los datos'], 400);
         }
 
-        $justifications = Justification::where('is_active', true)->paginate($perPage, ['*'], 'page', $page);
+        $justifications = Justification::where('active', true)->paginate($perPage, ['*'], 'page', $page);
 
         $data = [];
         foreach ($justifications->items() as $justification) {
