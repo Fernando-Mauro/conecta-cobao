@@ -40,8 +40,10 @@ class TutorController extends Controller
     public function getTutorsByGroup($group)
     {
         $user = Auth::user();
+        
         $admin = Admin::where('user_id', $user->id)->first();
-        $group = Groups::where('name', $group)->where('campus_id', $admin->campus_id)->first();
+        $group = Groups::where('id', $group)->where('campus_id', $admin->campus_id)->first();
+
         if($group){
             $students = Student::where('group_id', $group->id)->select('id')->get();
             $tutorIds = TutorStudent::whereIn('student_id', $students->pluck('id'))->select('tutor_id')->distinct()->get();
@@ -50,6 +52,8 @@ class TutorController extends Controller
             foreach ($tutors as $tutor) {
                 $tutor->campus = $campus->campus_number;
             }
+        }else{
+            return 'No hay grupo';
         }
     
         return Response::json($tutors);
