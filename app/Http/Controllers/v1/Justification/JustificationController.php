@@ -29,13 +29,13 @@ class JustificationController extends Controller
             'start' => 'required|date',
             'end' => 'required|date',
             'tutor-name' => 'required|string',
-            'officialLetterUrl' => 'required|url',
+            'officialLetterUrls' => 'required',
         ]);
 
         if($validator->fails()){
             return Response::json(['message' => 'Formato de datos invalidos'], 400);
         }
-
+        Log::channel('daily')->debug(json_encode($request->all()));
         $userId = Auth::id();
         $tutor = Tutor::where('user_id', $userId)->first();
 
@@ -59,11 +59,11 @@ class JustificationController extends Controller
         // Crear la justificación
         $justification = new Justification([
             'student_id' => $student->id,
-            'document_url' => $request->input('officialLetterUrl'),
+            'document_url_json' => $request->input('officialLetterUrls'),
             'tutor_id' => $tutor->id,
             'start_date' => $request->input('start'),
             'end_date' => $request->input('end'),
-            'cctive' => true, // Puedes personalizar esto según tus necesidades
+            'active' => true, // Puedes personalizar esto según tus necesidades
             'approved' => null, // Puedes establecer esto como nulo por defecto
         ]);
 
@@ -147,7 +147,7 @@ class JustificationController extends Controller
             'tutor_id' => $tutor->id,
             'tutor_name' => $tutor->name,
             'tutor_email' => $justification->tutor_email,
-            'document_url' => $justification->document_url,
+            'document_url_json' => $justification->document_url_json,
             'start_date' => $justification->start_date,
             'end_date' => $justification->end_date,
             'is_approved' => $justification->approved,

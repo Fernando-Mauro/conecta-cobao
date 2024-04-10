@@ -19,7 +19,8 @@ class Justification extends Model
         'start_date',
         'end_date',
         'is_active',
-        'is_approved'
+        'is_approved',
+        'document_url_json'
     ];
 
     public function student(): BelongsTo
