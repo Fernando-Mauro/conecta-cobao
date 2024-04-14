@@ -141,14 +141,14 @@ class TelegramController extends Controller
                     $userTutor = User::where('id', $tutor->user_id)->first();
                     Log::channel('daily')->info('Usuario del tutor obtenido: ' . json_encode($userTutor));
 
-                    if (JWTAuth::attempt(['email' => $userTutor->email, 'password' => $password])) {
+                    if (JWTAuth::attempt(['email' => $userTutor->email, 'password' => $password]) && $tutor->telegram_chat_id == null) {
                         $tutor->telegram_chat_id = $chatId;
                         $tutor->save();
                         $message = 'Número telefónico asignado correctamente.' . "\n" . 'A partir de este momento recibirás notificaciones sobre la entrada y salida del estudiante.';
                         $this->setConversationStatus($chatId, null);
                         Log::channel('daily')->info('Autenticación exitosa y chatId asignado al tutor');
                     } else {
-                        $message = 'El codigo de seguridad es incorrecto, por favor intenta de nuevo';
+                        $message = 'El codigo de seguridad es incorrecto o ya hay otro número registrado, por favor intenta de nuevo';
                         Log::channel('daily')->info('Falló la autenticación');
                     }
                 } else {
