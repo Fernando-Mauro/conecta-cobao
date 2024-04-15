@@ -8,6 +8,7 @@ use App\Models\Campus;
 use App\Models\Groups;
 use App\Models\Student;
 use App\Models\StudentCheckIn;
+use App\Models\Teacher;
 use App\Models\Tutor;
 use App\Models\TutorStudent;
 use App\Traits\StudentTrait;
@@ -113,27 +114,35 @@ class StudentController extends Controller
         $students = Student::where('campus_id', $admin->campus_id)->select('name', 'group_id', 'enrollment', 'id')->get();
         foreach ($students as $student) {
             $group = Groups::where('id', $student->group_id)->first();
-            if($group){
+            if ($group) {
                 $student->group = $group->name;
             }
             $student->campus = $campus->campus_number;
         }
         return Response::json($students, 200);
     }
-    
+
 
 
     public function getStudentsByGroup($groupId): JsonResponse
     {
         $userId = Auth::id();
-        
-        if(!$userId){
+
+        if (!$userId) {
             return Response::json(['message' => 'No estas autenticado'], 403);
         }
 
         $admin = Admin::where('user_id', $userId)->first();
+        $teacher = Teacher::where('user_id', $userId)->first();
 
-        $group = Groups::where('id', $groupId)->where('campus_id', $admin->campus_id)->first();
+        if ($admin) {
+            $group = Groups::where('id', $groupId)->where('campus_id', $admin->campus_id)->first();
+        } elseif ($teacher) {
+            $group = Groups::where('id', $groupId)->where('campus_id', $teacher->campus_id)->first();
+        } else {
+            return Response::json(['message' => 'El usuario no es ni administrador ni profesor'], 403);
+        }
+
         if ($group) {
             $students = Student::where('group_id', $group->id)
                 ->selectRaw('id, name as nombre, curp, enrollment as matricula, phone as telefono')
@@ -143,6 +152,7 @@ class StudentController extends Controller
             return Response::json(['message' => 'No se encontró el grupo'], 404);
         }
     }
+
 
 
     public function getChecksByPeriod(Request $request, $enrollment): JsonResponse

@@ -25,15 +25,17 @@ Route::prefix('v1')->group(function () {
             Route::post('/massiveLoad', 'App\Http\Controllers\v1\Admin\AdminRegistrationController@registerAdmins');
             Route::get('/', 'App\Http\Controllers\v1\Admin\AdminController@getAllAdmins');
             
-            Route::get('/getGroupsBySemester/{semester}', 'App\Http\Controllers\v1\Admin\AdminController@getGroups');
-
+            
             // Get, edit and delete admin
             Route::prefix('/{id}')->group(function(){
                 Route::get('/', 'App\Http\Controllers\v1\Admin\AdminController@getAdminById');
                 Route::patch('/', 'App\Http\Controllers\v1\Admin\AdminController@editAdminById');
                 Route::delete('/', 'App\Http\Controllers\v1\Admin\AdminController@deleteAdminById');
             });
-
+            
+        });
+        Route::middleware('jwt.verify', 'role:admin,teacher')->group(function () {
+            Route::get('/getGroupsBySemester/{semester}', 'App\Http\Controllers\v1\Admin\AdminController@getGroups');
         });
     });
 
@@ -61,6 +63,7 @@ Route::prefix('v1')->group(function () {
             Route::patch('/{id}', 'App\Http\Controllers\v1\Student\StudentEditController@editStudentById');
             Route::delete('{id}', 'App\Http\Controllers\v1\Student\DeleteStudentController@deleteStudentById');
         });
+
         Route::middleware(['jwt.verify', 'role:tutor,admin,teacher'])->group(function () {
             Route::get('{id}', 'App\Http\Controllers\v1\Student\StudentController@getStudentById');
         });

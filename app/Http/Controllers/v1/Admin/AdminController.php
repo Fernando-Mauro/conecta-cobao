@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -46,7 +47,7 @@ class AdminController extends Controller
                     'número de plantel' => $admin->campus->campus_number,
                 ];
             });
-    
+
         return Response::json($admins, 200);
     }
 
@@ -93,7 +94,7 @@ class AdminController extends Controller
     {
         $admin = Admin::where('id', $id)->first();
 
-        if(!$admin){
+        if (!$admin) {
             return Response::json(['message' => 'Admin no encontrado'], 404);
         }
 
@@ -103,23 +104,29 @@ class AdminController extends Controller
     public function getGroups($semester)
     {
         $userId = Auth::id();
-        
-        if(!$userId){
+
+        if (!$userId) {
             return Response::json(['message' => 'No se encuentra autenticado']);
         }
+
         $admin = Admin::where('user_id', $userId)->first();
-    
-        $groups = Groups::where('campus_id',$admin->campus_id)->get();
-    
+        $teacher = Teacher::where('user_id', $userId)->first();
+
+        if ($admin) {
+            $groups = Groups::where('campus_id', $admin->campus_id)->get();
+        } elseif ($teacher) {
+            $groups = Groups::where('campus_id', $teacher->campus_id)->get();
+        } else {
+            return Response::json(['message' => 'El usuario no es ni administrador ni profesor']);
+        }
+
         $groupsFilter = [];
-        foreach($groups as $group)
-        {
+        foreach ($groups as $group) {
             // Verificar si el nombre del grupo comienza con el semestre
-            if(strpos($group->name, $semester) === 0)
+            if (strpos($group->name, $semester) === 0)
                 array_push($groupsFilter, $group);
         }
-        
+
         return Response::json($groupsFilter, 200);
     }
-    
 }
