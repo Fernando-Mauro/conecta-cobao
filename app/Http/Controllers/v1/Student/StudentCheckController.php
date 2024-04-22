@@ -28,20 +28,35 @@ class StudentCheckController extends Controller
         return true;
     }
 
+    public function determineCheckType($student_id)
+    {
+        $date = date('Y-m-d');
+        $checkIns = StudentCheckIn::where('student_id', $student_id)->whereDate('created_at', $date)->count();
+        $checkOuts = StudentCheckOut::where('student_id', $student_id)->whereDate('created_at', $date)->count();
+
+        if ($checkIns > $checkOuts) {
+            return 'out';
+        } else {
+            return 'in';
+        }
+    }
+
+
     public function registerStudentCheckByEnrollment(Request $request, $enrollment)
     {
-        $type = $request->input('type', 'in');
-
+        
         try {
             if (!$this->isValidEnrollment($enrollment)) {
                 return Response::json(["message" => "Matrícula inválida 🤔"], 404);
             }
-
+            
             $student = Student::where('enrollment', $enrollment)->first();
-
+            
             if (!$student) {
                 return Response::json(['message' => 'Estudiante no encontrado'], 404);
             }
+            
+            $type = $this->determineCheckType($student->id);
             if ($type === 'in') {
                 $this->registerIn($student);
                 return Response::json(["message" => "Registro y mensaje enviado correctamente"], 200);
