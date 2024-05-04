@@ -10,17 +10,19 @@ use App\Models\TutorStudent;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Telegram\Bot\Laravel\Facades\Telegram;
+use Spatie\ImageOptimizer\OptimizerChainFactory;
 
 class JustificationController extends Controller
 {
     public function postJustification(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'name' => 'required|string',
             'curp' => 'required|string',
@@ -29,13 +31,37 @@ class JustificationController extends Controller
             'start' => 'required|date',
             'end' => 'required|date',
             'tutor-name' => 'required|string',
-            'officialLetterUrls' => 'required',
+            'office' => 'required|mimes:jpeg,png,jpg',
+            'recipe' => 'required|mimes:jpeg,png,jpg',
+            'ine' => 'required|mimes:jpeg,png,jpg',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return Response::json(['message' => 'Formato de datos invalidos'], 400);
         }
+
         Log::channel('daily')->debug(json_encode($request->all()));
+
+        // Obtén los archivos de las imágenes
+        $office = $request->file('office');
+        $recipe = $request->file('recipe');
+        $ine = $request->file('ine');
+
+        $officeName = time() . '_' . $office->getClientOriginalName();
+        $recipeName = time() . '_' . $recipe->getClientOriginalName();
+        $ineName = time() . '_' . $ine->getClientOriginalName();
+
+        // Guardar las imágenes en la carpeta public/justifications
+        $office->storeAs('justifications', $officeName, 'local');
+        $recipe->storeAs('justifications', $recipeName, 'local');
+        $ine->storeAs('justifications', $ineName, 'local');
+
+        $fileNames = json_encode([
+            $officeName,
+            $recipeName,
+            $ineName,
+        ]);
+
         $userId = Auth::id();
         $tutor = Tutor::where('user_id', $userId)->first();
 
@@ -44,22 +70,20 @@ class JustificationController extends Controller
             ->orWhere('curp', $request->input('curp'))
             ->first();
 
+        if (!$student) {
+            return Response::json(['error' => 'No se encontró al estudiante'], 404);
+        }
+
         $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
 
-        if ($tutorStudent->tutor_id != $tutor->id) {
+        if (!$tutorStudent || $tutorStudent->tutor_id != $tutor->id) {
             return Response::json(['message' => 'No tienes permiso para acceder a estos datos'], 403);
         }
-
-        if (!$tutorStudent) {
-            return Response::json(['error' => 'No se encontró la relación Tutor-Estudiante'], 404);
-        }
-
-        // $tutor = $tutorStudent->activeTutor;
 
         // Crear la justificación
         $justification = new Justification([
             'student_id' => $student->id,
-            'document_url_json' => $request->input('officialLetterUrls'),
+            'files_names' => $fileNames,
             'tutor_id' => $tutor->id,
             'start_date' => $request->input('start'),
             'end_date' => $request->input('end'),
@@ -69,7 +93,6 @@ class JustificationController extends Controller
 
         // Guardar la justificación en la base de datos
         $justification->save();
-
 
         return Response::json(['success' => true], 200);
     }
@@ -146,8 +169,8 @@ class JustificationController extends Controller
             'student_name' => $student->name,
             'tutor_id' => $tutor->id,
             'tutor_name' => $tutor->name,
-            'tutor_email' => $justification->tutor_email,
-            'document_url_json' => $justification->document_url_json,
+            'tutor_phone' => $tutor->phone,
+            'files_names' => $justification->files_names,
             'start_date' => $justification->start_date,
             'end_date' => $justification->end_date,
             'is_approved' => $justification->approved,
@@ -166,7 +189,7 @@ class JustificationController extends Controller
             'approve' => 'required|boolean',
             'observation' => 'required|string'
         ]);
-        
+
         Log::channel('daily')->debug('intentando aprobar justiciante');
         // Obtener la justificación por ID
         $justification = Justification::find($id);
@@ -192,7 +215,7 @@ class JustificationController extends Controller
         $observations = $request->input('observation') == '' ? '' : "Observaciones: {$request->input('observation')}";
 
         // FIXME: Corregir en caso de que no exista el chat_id
-        if($tutor->telegram_chat_id){
+        if ($tutor->telegram_chat_id) {
             Telegram::sendMessage([
                 'chat_id' => $tutor->telegram_chat_id,
                 'text' => "{$message} \n {$observations}",
@@ -216,7 +239,7 @@ class JustificationController extends Controller
             'updated_at' => $justification->updated_at,
         ];
 
-        return Response::json($data,200);
+        return Response::json($data, 200);
     }
 
     public function getActiveJustificationByStudentId($id)
@@ -291,5 +314,22 @@ class JustificationController extends Controller
         });
 
         return Response::json($justifications, 200);
+    }
+
+    public function getJustificationFile($fileName)
+    {
+        $path = storage_path('app/justifications/' . $fileName);
+
+        if (!File::exists($path)) {
+            abort(404);
+        }
+
+        $file = File::get($path);
+        $type = File::mimeType($path);
+
+        $response = Response::make($file, 200);
+        $response->header("Content-Type", $type);
+
+        return $response;
     }
 }

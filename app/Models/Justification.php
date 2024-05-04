@@ -20,7 +20,7 @@ class Justification extends Model
         'end_date',
         'is_active',
         'is_approved',
-        'document_url_json'
+        'files_names'
     ];
 
     public function student(): BelongsTo
