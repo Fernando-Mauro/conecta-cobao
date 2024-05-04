@@ -111,12 +111,12 @@ Route::prefix('v1')->group(function () {
         Route::middleware('jwt.verify', 'role:tutor')->group(function () {
             Route::post('/', 'App\Http\Controllers\v1\Justification\JustificationController@postJustification');
         });
-
+        
+        Route::get('/media/{fileName}', 'App\Http\Controllers\v1\Justification\JustificationController@getJustificationFile');
         Route::middleware(['jwt.verify', 'role:admin'])->group(function () {
             Route::get('/', 'App\Http\Controllers\v1\Justification\JustificationController@getJustifications');
             // Route::get('/{id}', 'App\Http\Controllers\v1\Justification\JustificationController@getJustificationById');
             Route::get('/getjustificationsByPeriod', 'App\Http\Controllers\v1\Justification\JustificationController@getjustificationsByPeriod');
-            Route::get('/media/{fileName}', 'App\Http\Controllers\v1\Justification\JustificationController@getJustificationFile');
             Route::patch('/{id}', 'App\Http\Controllers\v1\Justification\JustificationController@editJustificationById');
         });
 

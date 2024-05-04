@@ -321,7 +321,7 @@ class JustificationController extends Controller
         $path = storage_path('app/justifications/' . $fileName);
 
         if (!File::exists($path)) {
-            abort(404);
+            return Response::json(['error' => 'Archivo no encontrado'], 404);
         }
 
         $file = File::get($path);
