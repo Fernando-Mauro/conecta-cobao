@@ -152,17 +152,30 @@ class JustificationController extends Controller
     }
     public function getJustificationById($id): JsonResponse
     {
-        // FIXME: COrregir parra no enviar datos a quien no corresponde
         // $id = $request->input('id');
         $justification = Justification::find($id);
-
+    
         if (!$justification) {
             return response()->json(['error' => 'Justificación no encontrada'], 404);
         }
-
+    
         $student = $justification->student;
         $tutor = $justification->tutor;
-
+    
+        // Obtén los nombres de los archivos de las imágenes
+        $fileNames = json_decode($justification->files_names, true);
+    
+        // Lee los archivos de imagen y codifícalos en base64
+        $images = [];
+        foreach ($fileNames as $key => $fileName) {
+            $path = storage_path('app/justifications/' . $fileName);
+            if (File::exists($path)) {
+                $fileData = File::get($path);
+                $mimeType = File::mimeType($path);
+                $images[$key] = 'data:' . $mimeType . ';base64,' . base64_encode($fileData);
+            }
+        }
+    
         $data = [
             'id' => $justification->id,
             'student_id' => $student->id,
@@ -170,7 +183,7 @@ class JustificationController extends Controller
             'tutor_id' => $tutor->id,
             'tutor_name' => $tutor->name,
             'tutor_phone' => $tutor->phone,
-            'files_names' => $justification->files_names,
+            'images' => $images,  // Agrega las imágenes a la respuesta
             'start_date' => $justification->start_date,
             'end_date' => $justification->end_date,
             'is_approved' => $justification->approved,
@@ -179,9 +192,11 @@ class JustificationController extends Controller
             'updated_at' => $justification->updated_at,
         ];
         Log::channel('daily')->debug(json_encode($justification));
-
+    
         return response()->json([$data]);
     }
+    
+
     public function editJustificationById($id, Request $request): JsonResponse
     {
         // Validación de datos del request
