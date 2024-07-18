@@ -5,31 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Teacher extends Model
+class Group extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'name',
-        'phone',
-        'user_id',
-        'active',
-        'campus_id'
+        'key',
+        'campus_id',
+        'active'
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
+    public $timestamps = true;
     public function groupTeachers()
     {
         return $this->hasMany(GroupTeacher::class);
     }
 
-    public function groups()
+    public function teachers()
     {
-        return $this->belongsToMany(Group::class, 'group_teacher')
+        return $this->belongsToMany(Teacher::class, 'group_teacher')
                     ->withPivot('subject_id'); // Incluye la materia en el pivot
     }
 }
