@@ -62,6 +62,7 @@ class AuthController extends Controller
         } catch (JWTException $e) {
             return response()->json(['error' => 'No se puede crear el token'], 500);
         }
+        
         $user = Auth::user();
 
         $role = $user->roles;

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\v1\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
-use App\Models\Groups;
+use App\Models\Group;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -22,7 +22,7 @@ class StudentRegistrationController extends Controller
     public function createStudent($name, $phone, $groupNumber, $campusNumber, $enrollment, $curp)
     {
         $campusId = Campus::where('campus_number', $campusNumber)->first()->id;
-        $groupId = Groups::where('name', $groupNumber)->where('campus_id', $campusId)->first()->id;
+        $groupId = Group::where('name', $groupNumber)->where('campus_id', $campusId)->first()->id;
         $user = User::create([
             'name' => $name,
             'email' => $enrollment,
