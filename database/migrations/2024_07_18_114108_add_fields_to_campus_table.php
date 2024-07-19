@@ -13,9 +13,7 @@ return new class extends Migration
     {
         Schema::table('campus', function (Blueprint $table) {
             $table->unsignedBigInteger('school_id'); // Adding the foreign key column
-            $table->string('city')->nullable()->after('address');
-            $table->string('state')->nullable()->after('city');
-            $table->string('country')->nullable()->after('state');
+            $table->string('city')->nullable();
             
             // Setting up the foreign key constraint
             $table->foreign('school_id')->references('id')->on('schools')->onDelete('cascade');
@@ -31,8 +29,6 @@ return new class extends Migration
             $table->dropForeign(['school_id']);
             $table->dropColumn('school_id');
             $table->dropColumn('city');
-            $table->dropColumn('state');
-            $table->dropColumn('country');
         });
     }
 };

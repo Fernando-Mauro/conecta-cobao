@@ -5,18 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Campus extends Model
+class School extends Model
 {
     use HasFactory;
-    protected $table = 'campus';
     protected $fillable = [
         'name',
-        'campus_number',
         'addres',
         'city',
-        'school_id',
-        'active'
+        'state',
+        'country'
     ];
-
-    public $timestamps = true;
 }

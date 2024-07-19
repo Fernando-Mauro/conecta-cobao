@@ -16,7 +16,10 @@ class CampusSeeder extends Seeder
         Campus::create([
             'name' => 'Cuilápam',
             'campus_number' => 32,
-            'address' => 'Prolongación 2 de Abril S/N, Centro, 71403, Cuilápam de Guerrero, Oaxaca'
+            'address' => 'Prolongación 2 de Abril S/N, Centro, 71403, Cuilápam de Guerrero, Oaxaca',
+            'city' => "Cuilápam de Guerrero",
+            'school_id' => 1,
+            'active' => true
         ]);
     }
 }
