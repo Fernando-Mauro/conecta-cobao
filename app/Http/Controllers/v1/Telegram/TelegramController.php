@@ -28,48 +28,48 @@ class TelegramController extends Controller
     {
         $update = Telegram::commandsHandler(true);
 
-        if ($update->isType('my_chat_member')) {
-            Log::channel('daily')->debug('Mensaje raro');
-        } else {
-            if ($update->isType('callback_query')) {
-                $callbackData = $update->getCallbackQuery()->getData();
+        // if (!$update->isType('my_chat_member')) {
+        //     Log::channel('daily')->debug('Mensaje raro');
+        // } else {
+        //     if ($update->isType('callback_query')) {
+        //         $callbackData = $update->getCallbackQuery()->getData();
 
-                if ($callbackData === 'registrar') {
-                    $this->setRegisterState($update);
-                } else if ($callbackData === 'borrar') {
-                    $this->setDeleteState($update);
-                }
-            } else {
-                Log::channel('daily')->debug('Mensaje normal');
-                $chatId = $update->getMessage()->getChat()->getId();
+        //         if ($callbackData === 'registrar') {
+        //             $this->setRegisterState($update);
+        //         } else if ($callbackData === 'borrar') {
+        //             $this->setDeleteState($update);
+        //         }
+        //     } else {
+        //         Log::channel('daily')->debug('Mensaje normal');
+        //         $chatId = $update->getMessage()->getChat()->getId();
 
-                // Busca el estado actual en la base de datos
-                $conversation = ConversationStatus::where('chat_id', $chatId)->first();
+        //         // Busca el estado actual en la base de datos
+        //         $conversation = ConversationStatus::where('chat_id', $chatId)->first();
 
-                if ($conversation) {
-                    $currentState = $conversation->conversation_state;
-                    switch ($currentState) {
-                        case 'registro':
-                            $enrollment = $update->getMessage()->getText();
-                            $this->setEnrollmentToConversationStatus($enrollment, $chatId);
-                            break;
-                        case 'password':
-                            $password = $update->getMessage()->getText();
-                            $this->handleRegistration($chatId, $password);
-                            break;
-                        case 'borrar':
-                            $enrollment = $update->getMessage()->getText();
-                            $this->handleDeletion($enrollment, $chatId);
-                            break;
-                        default:
-                            Telegram::sendMessage([
-                                'chat_id' => $chatId,
-                                'text' => 'Lo siento, prueba con otra palabra o comando'
-                            ]);
-                    }
-                }
-            }
-        }
+        //         if ($conversation) {
+        //             $currentState = $conversation->conversation_state;
+        //             switch ($currentState) {
+        //                 case 'registro':
+        //                     $enrollment = $update->getMessage()->getText();
+        //                     $this->setEnrollmentToConversationStatus($enrollment, $chatId);
+        //                     break;
+        //                 case 'password':
+        //                     $password = $update->getMessage()->getText();
+        //                     $this->handleRegistration($chatId, $password);
+        //                     break;
+        //                 case 'borrar':
+        //                     $enrollment = $update->getMessage()->getText();
+        //                     $this->handleDeletion($enrollment, $chatId);
+        //                     break;
+        //                 default:
+        //                     Telegram::sendMessage([
+        //                         'chat_id' => $chatId,
+        //                         'text' => 'Lo siento, prueba con otra palabra o comando'
+        //                     ]);
+        //             }
+        //         }
+        //     }
+        // }
 
         return 'ok';
     }
