@@ -16,6 +16,7 @@ class StartCommand extends Command
     {
         $keyboard = Keyboard::make()->row([
             Keyboard::button(['text' => '/padre  👨']),
+            Keyboard::button(['text' => '/madre  👩']),
         ])->row([
             Keyboard::button(['text' => '/docente  🧑‍🏫']),
         ])->setOneTimeKeyboard(true);
