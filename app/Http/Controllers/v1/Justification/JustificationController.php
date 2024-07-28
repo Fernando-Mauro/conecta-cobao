@@ -12,11 +12,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Telegram\Bot\Laravel\Facades\Telegram;
-use Spatie\ImageOptimizer\OptimizerChainFactory;
 
 class JustificationController extends Controller
 {
@@ -39,8 +37,6 @@ class JustificationController extends Controller
         if ($validator->fails()) {
             return Response::json(['message' => 'Formato de datos invalidos'], 400);
         }
-
-        // Log::channel('daily')->debug(json_encode($request->all()));
 
         // Obtén los archivos de las imágenes
         $office = $request->file('office');
@@ -195,7 +191,7 @@ class JustificationController extends Controller
     public function editJustificationById($id, Request $request): JsonResponse
     {
         // Validación de datos del request
-        $valitador = Validator::make([$request->all()], [
+        $validator = Validator::make([$request->all()], [
             'approve' => 'required|boolean',
             'observation' => 'required|string'
         ]);

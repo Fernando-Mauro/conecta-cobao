@@ -53,11 +53,11 @@ class TutorCommand extends Command
             // Si no se encuentra un registro, crea uno con un estado inicial (por ejemplo, "none")
             $conversation = new ConversationStatus();
             $conversation->chat_id = $chatId;
-            $conversation->conversation_state = null;
-            $conversation->enrollment = null;
-            $conversation->type_user = "tutor";
+            $conversation->identifier = null;
             $conversation->save();
         }
+        $conversation->conversation_state = null;
+        $conversation->type_user = "tutor";
 
         return $conversation;
     }

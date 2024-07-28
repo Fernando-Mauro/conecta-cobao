@@ -2,11 +2,15 @@
 
 namespace App\Traits;
 
+use Illuminate\Support\Facades\Validator;
+
 trait TeacherTrait{
     public function isValidEmail($email)
     {
-        if (!preg_match('/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/', $email))
-            return false;
-        return true;
+        $validator = Validator::make(['email' => $email], [
+            'email' => 'required|email',
+        ]);
+    
+        return !$validator->fails();
     }
 }

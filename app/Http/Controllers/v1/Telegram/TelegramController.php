@@ -56,8 +56,8 @@ class TelegramController extends Controller
                 $this->handleRegistration($chatId, $password, $type_user);
                 break;
             case 'borrar':
-                $enrollment = $update->getMessage()->getText();
-                $this->handleDeletion($enrollment, $chatId);
+                $identifier = $update->getMessage()->getText();
+                $this->handleDeletion($identifier, $chatId);
                 break;
         }
     }
@@ -174,20 +174,33 @@ class TelegramController extends Controller
 
     private function handleTeacherRegistration($conversation, $chatId, $password)
     {
-        $teacher = Teacher::where('email', $conversation->identifier)->first();
-        if (!$teacher) {
+        $user = User::where('email', $conversation->identifier)->first();
+        
+        if (!$user) {
             Telegram::sendMessage([
                 'chat_id' => $chatId,
-                'text' => 'No se encontró ningún docente con el correo proporcionado.'
+                'text' => 'No se encontró ningún usuario con el correo proporcionado.'
             ]);
             return;
         }
 
+        // check if the role of the user is teacher 
+        if(!$user->getRoleNames()->contains('teacher')){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No se tiene autorización de docente con el correo proporcionado.'
+            ]);
+            return;
+        }
+        
+        $teacher = Teacher::where('user_id', $user->id)->first();
+
         $userTeacher = User::where('id', $teacher->user_id)->first();
+        
         if (JWTAuth::attempt(['email' => $userTeacher->email, 'password' => $password]) && $teacher->telegram_chat_id == null) {
             $teacher->telegram_chat_id = $chatId;
             $teacher->save();
-            $message = 'Número telefónico asignado correctamente.' . "\n" . 'A partir de este momento recibirás notificaciones sobre la entrada y salida del estudiante.';
+            $message = 'Número telefónico asignado correctamente.' . "\n" . 'A partir de este momento recibirás notificaciones sobre estudiantes con permisos.';
 
             $this->setConversationStatus($chatId, null);
             Telegram::sendMessage([
@@ -211,42 +224,63 @@ class TelegramController extends Controller
         ]);
 
     }
-    // public function handleDeletion($enrollment, $chatId)
-    // {
-    //     // Busca al estudiante por la matrícula proporcionada
-    //     $student = Student::where('enrollment', $enrollment)->first();
-    //     if ($this->isValidEnrollment($enrollment)) {
-    //         if ($student) {
-    //             // Encuentra la relación del tutor con el estudiante
-    //             $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
+    public function handleDeletion($identifier, $chatId)
+    {   
+        // TODO: Implementar borrar el número para el maestro
+        if($this->isValidEnrollment($identifier)){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'La matrícula proporcionada no es válida ' . "\n" . 'Ingresa de nuevo la matrícula.'
+            ]);
+            return;
+        }
 
-    //             if ($tutorStudent) {
-    //                 // Encuentra al tutor correspondiente
-    //                 $tutor = Tutor::find($tutorStudent->tutor_id);
+        $student = Student::where('enrollment', $identifier)->first();
+        
+        if(!$student){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No se encontró ningún estudiante con la matrícula proporcionada.'
+            ]);
+            return;
+        }
+        $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
+        
+        if(!$tutorStudent){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No se encontró una relación de tutor para este estudiante.'
+            ]);
+            return;
+        }
+        $tutor = Tutor::find($tutorStudent->tutor_id);
 
-    //                 if ($tutor) {
-    //                     // Establece telegram_chat_id en null
-    //                     $tutor->telegram_chat_id = null;
-    //                     $tutor->save();
-    //                     $message = 'Se ha eliminado la asociación del tutor con el estudiante. Ya no recibirás notificaciones.';
-    //                     $this->setConversationStatus($chatId, null);
-    //                 } else {
-    //                     $message = 'No se pudo encontrar al tutor asociado a este estudiante.';
-    //                 }
-    //             } else {
-    //                 $message = 'No se encontró una relación de tutor para este estudiante.';
-    //             }
-    //         } else {
-    //             $message = 'No se encontró ningún estudiante con la matrícula proporcionada.';
-    //         }
-    //     } else {
-    //         $message = 'La matrícula proporcionada no es válida 😠' . "\n" . 'Ingresa de nuevo la matrícula.';
-    //     }
+        if(!$tutor){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No se encontró un tutor asociado a este estudiante.'
+            ]);
+            return;
+        }
+        
+        if($tutor->telegram_chat_id != $chatId){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No tienes permisos para eliminar la asociación del tutor con el estudiante.'
+            ]);
+            return;
+        }
 
+        $tutor->telegram_chat_id = null;
+        $tutor->save();
+        $message = 'Se ha eliminado la asociación del tutor con el estudiante. Ya no recibirás notificaciones.';
+        $this->setConversationStatus($chatId, null);
 
-    //     Telegram::sendMessage([
-    //         'chat_id' => $chatId,
-    //         'text' => $message
-    //     ]);
-    // }
+        Telegram::sendMessage([
+            'chat_id' => $chatId,
+            'text' => $message
+        ]);
+
+        return;
+    }
 }

@@ -25,7 +25,7 @@ class TeacherCommand extends Command
                 ->row(
                     [
                         Keyboard::inlineButton(['text' => 'Registrar número', 'callback_data' => 'registrar']),
-                        Keyboard::inlineButton(['text' => 'Borrar número', 'callback_data' => 'borrar'])
+                        // Keyboard::inlineButton(['text' => 'Borrar número', 'callback_data' => 'borrar'])
                     ]
                 );
             $this->replyWithMessage([
@@ -53,12 +53,12 @@ class TeacherCommand extends Command
             // Si no se encuentra un registro, crea uno con un estado inicial (por ejemplo, "none")
             $conversation = new ConversationStatus();
             $conversation->chat_id = $chatId;
-            $conversation->conversation_state = null;
-            $conversation->enrollment = null;
-            $conversation->type_user = "teacher";
             $conversation->save();
+            $conversation->identifier = null;
+            $conversation->conversation_state = null;
+            $conversation->type_user = "teacher";
         }
-
+        
         return $conversation;
     }
 
