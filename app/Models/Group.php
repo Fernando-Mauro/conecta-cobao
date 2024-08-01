@@ -11,8 +11,8 @@ class Group extends Model
 
     protected $fillable = [
         'name',
-        'key',
         'campus_id',
+        'level_id',
         'active'
     ];
 
@@ -22,6 +22,16 @@ class Group extends Model
         return $this->hasMany(GroupTeacher::class);
     }
 
+    public function campus()
+    {
+        return $this->belongsTo(Campus::class);
+    }
+
+    public function level()
+    {
+        return $this->belongsTo(Level::class);
+    }
+    
     public function teachers()
     {
         return $this->belongsToMany(Teacher::class, 'group_teacher')

@@ -14,25 +14,38 @@ class GroupsSeeder extends Seeder
      */
     public function run(): void
     {
-        for($i = 201; $i < 215; $i++){
+        for($i = 101; $i < 136; $i++){
+            if($i >= 111 && $i <= 130)
+                continue;
+
             Group::create([
                 'name' => $i,
-                'campus_id' => Campus::where('campus_number', 32)->first()->id,
+                'campus_id' => 1,
+                'level_id' => 1,
             ]);
         }
 
-        for($i = 401; $i < 413; $i++){
+        for($i = 301; $i < 336; $i++){
+            if($i >= 311 && $i <= 330)
+                continue;
+
             Group::create([
                 'name' => $i,
-                'campus_id' => Campus::where('campus_number', 32)->first()->id,
+                'campus_id' => 1,
+                'level_id' => 3,
             ]);
         }
 
-        for($i = 601; $i < 613; $i++){
+        for($i = 501; $i < 535; $i++){
+            if($i >= 511 && $i <= 530)
+                continue;
+
             Group::create([
                 'name' => $i,
-                'campus_id' => Campus::where('campus_number', 32)->first()->id,
+                'campus_id' => 1,
+                'level_id' => 5,
             ]);
         }
+
     }
 }

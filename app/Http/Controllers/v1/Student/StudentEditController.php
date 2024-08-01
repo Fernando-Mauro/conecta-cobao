@@ -50,17 +50,24 @@ class StudentEditController extends Controller
         // $id = $request->input('id');
 
         $student = Student::where('id', $id)->first();
-        $student->update($request->only('name', 'curp', 'enrollment', 'group', 'phone'));
+        $student->update($request->only('curp', 'enrollment', 'group', 'phone'));
+        // Update the user for the student
+        $student->user()->update($request->only('name'));
 
         $tutorStudent = TutorStudent::where('student_id', $id)->first();
-        $tutor = Tutor::where('id', $tutorStudent->tutor_id);
-        
-        $tutorData = [
-            'name' => $request->input('tutor_name'),
+        $tutor = Tutor::where('id', $tutorStudent->tutor_id)->first();
+    
+        $tutorPhone = [
             'phone' => $request->input('tutor_phone')
         ];
-        $tutor->update($tutorData);
+        $tutor->update($tutorPhone);
 
+        // Update the user for the tutor
+        $tutorName = [
+            'name' => $request->input('tutor_name')
+        ];
+
+        $tutor->user()->update($tutorName);
         return Response::json(["message" => 'Los datos se han actualizado correctamente'], 200);
     }
 }

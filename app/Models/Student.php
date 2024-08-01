@@ -24,6 +24,11 @@ class Student extends Model
 
     public $timestamps = true;
 
+    // The student have  one user 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
     public function checkIns(): HasMany
     {
         return $this->hasMany(StudentCheckIn::class, 'student_id', 'id');

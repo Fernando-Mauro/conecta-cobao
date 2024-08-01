@@ -47,7 +47,6 @@ class TutorsRegistrationController extends Controller
             if (!$tutor) {
 
                 $tutor = Tutor::create([
-                    'name' => ($name == "NULL") ? "Desconocido" : $name,
                     'phone' => ($phone == "NULL") ? "Desconocido" : $phone,
                     'campus_id' => Campus::where('campus_number', $campusNumber)->first()->id,
                     'user_id' => $user->id

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\v1\Tutor;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\Campus;
-use App\Models\Groups;
+use App\Models\Group;
 use App\Models\Student;
 use App\Models\Tutor;
 use App\Models\TutorStudent;
@@ -19,18 +19,20 @@ class TutorController extends Controller
 {
     public function getTutorById($id)
     {
-        $tutor = Tutor::where('id', $id)->select('name', 'phone', 'user_id')->first();
+        $tutor = Tutor::where('id', $id)->select('phone', 'user_id')->first();
+        
         if (!$tutor) {
             return Response::json(['message' => 'Tutor no encontrado']);
         }
-        $user = User::where('id', $tutor->user_id)->select('email')->first();
+
+        $user = User::where('id', $tutor->user_id)->select('email', 'name')->first();
 
         if (!$user) {
             return Response::json(['message' => 'Usuario no encontrado']);
         }
 
         return Response::json([
-            'name' => $tutor->name,
+            'name' => $user->name,
             'phone' => $tutor->phone,
             'email' => $user->email,
         ], 200);
@@ -42,21 +44,34 @@ class TutorController extends Controller
         $user = Auth::user();
         
         $admin = Admin::where('user_id', $user->id)->first();
-        $group = Groups::where('id', $group)->where('campus_id', $admin->campus_id)->first();
+        $group = Group::where('id', $group)->where('campus_id', $admin->campus_id)->first();
 
+        $response = [];
         if($group){
             $students = Student::where('group_id', $group->id)->select('id')->get();
             $tutorIds = TutorStudent::whereIn('student_id', $students->pluck('id'))->select('tutor_id')->distinct()->get();
-            $tutors = Tutor::whereIn('id', $tutorIds->pluck('tutor_id'))->select('id', 'name', 'phone')->get();
+            $tutors = Tutor::whereIn('id', $tutorIds->pluck('tutor_id'))->select('id','phone', 'user_id')->get();
+            
+            // Get the names from de users
+            foreach ($tutors as $tutor) {
+                $response[] = [
+                    'id' => $tutor->id,
+                    'nombre' => User::where('id', $tutor->user_id)->select('name')->first()->name,
+                    'telefono' => $tutor->phone,
+                ];
+            }
+
             $campus = Campus::where('id', $admin->campus_id)->select('campus_number')->first();
+            
             foreach ($tutors as $tutor) {
                 $tutor->campus = $campus->campus_number;
             }
+
         }else{
             return 'No hay grupo';
         }
     
-        return Response::json($tutors);
+        return Response::json($response);
     }
     
 
@@ -77,7 +92,7 @@ class TutorController extends Controller
             return Response::json(['message' => 'Tutor no encontrado'], 404);
         }
 
-        $tutor->update($request->only('name', 'phone'));
+        $tutor->update($request->only( 'phone'));
         
         $user = User::where('id', $tutor->user_id)->first();
         

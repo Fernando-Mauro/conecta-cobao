@@ -18,7 +18,8 @@ class SchoolsSeeder extends Seeder
             'address' => 'Avenida Universidad 145, Universidad, Exhacienda Candiani, 71230 Santa Cruz Xoxocotlán, Oax.',
             'city' => 'Oaxaca de Juárez',
             'state' => 'Oaxaca',
-            'country' => 'México'
+            'country' => 'México',
+            'education_level' => 'Bachillerato'
         ]);
     }
 }

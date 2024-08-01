@@ -11,16 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('students', function (Blueprint $table) {
+        Schema::create('levels', function (Blueprint $table) {
             $table->id();
-            $table->string('enrollment')->unique();
-            // $table->string('name');
-            $table->string('phone');
-
-            $table->boolean('active')->default(true);
-            $table->string('curp')->unique();
+            $table->enum('name', ["Primero", "Segundo", "Tercero", "Cuarto", "Quinto", "Sexto", "Septimo", "Octavo", "Noveno", "Decimo"]); // Ejemplo: "Primero", "Segundo", "Tercero", etc.
             $table->unsignedBigInteger('campus_id');
-            $table->foreign('campus_id')->references('id')->on('campus');
+            $table->foreign('campus_id')->references('id')->on('campus')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -30,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('students');
+        Schema::dropIfExists('levels');
     }
 };

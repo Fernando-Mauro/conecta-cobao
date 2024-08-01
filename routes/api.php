@@ -25,7 +25,6 @@ Route::prefix('v1')->group(function () {
             Route::post('/massiveLoad', 'App\Http\Controllers\v1\Admin\AdminRegistrationController@registerAdmins');
             Route::get('/', 'App\Http\Controllers\v1\Admin\AdminController@getAllAdmins');
             
-            
             // Get, edit and delete admin
             Route::prefix('/{id}')->group(function(){
                 Route::get('/', 'App\Http\Controllers\v1\Admin\AdminController@getAdminById');
@@ -150,4 +149,9 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}', 'App\Http\Controllers\v1\Tutor\DeleteTutorController@deleteTutorById');
         });
     });
+    
+    Route::middleware(['jwt.verify', 'role:admin'])->group(function () {
+        Route::apiResource('subjects', \App\Http\Controllers\v1\Subject\SubjectController::class);
+    });    
+
 });

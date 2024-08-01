@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('city')->nullable();
             $table->string('state')->nullable();
             $table->string('country')->nullable();
+            $table->enum('education_level', ['Primaria', 'Secundaria', 'Bachillerato', 'Universidad']);
             $table->timestamps();
         });
     }

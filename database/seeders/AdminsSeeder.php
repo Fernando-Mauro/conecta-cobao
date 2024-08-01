@@ -25,6 +25,7 @@ class AdminsSeeder extends Seeder
                 'campus' => 32
             ],
         ];
+
         foreach($adminsData as $admin){
             $password = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6);
 
@@ -36,9 +37,7 @@ class AdminsSeeder extends Seeder
 
             
             Admin::create([
-                'name' => $user->name,
                 'phone' => $admin['telefono'],
-                'email' => $admin['correo'],
                 'campus_id' => Campus::where('campus_number', $admin['campus'])->first()->id,
                 'user_id' => $user->id
             ]);

@@ -23,6 +23,7 @@ class StudentRegistrationController extends Controller
     {
         $campusId = Campus::where('campus_number', $campusNumber)->first()->id;
         $groupId = Group::where('name', $groupNumber)->where('campus_id', $campusId)->first()->id;
+        
         $user = User::create([
             'name' => $name,
             'email' => $enrollment,
@@ -30,7 +31,6 @@ class StudentRegistrationController extends Controller
         ]);
 
         Student::create([
-            'name' => $name,
             'phone' => $phone,
             'group_id' => $groupId,
             'campus_id' => $campusId,

@@ -5,22 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Subject extends Model
+class Level extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'name',
-        'campus_id',
-        'level',
+        'campus_id'
     ];
-    public function groupTeachers()
-    {
-        return $this->hasMany(GroupTeacher::class);
-    }
 
     public function campus()
     {
         return $this->belongsTo(Campus::class);
+    }
+
+    public function groups()
+    {
+        return $this->hasMany(Group::class);
     }
 }

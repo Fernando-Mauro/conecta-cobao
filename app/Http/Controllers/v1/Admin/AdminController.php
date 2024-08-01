@@ -4,6 +4,7 @@ namespace App\Http\Controllers\v1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\Group;
 use App\Models\Groups;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -113,9 +114,9 @@ class AdminController extends Controller
         $teacher = Teacher::where('user_id', $userId)->first();
 
         if ($admin) {
-            $groups = Groups::where('campus_id', $admin->campus_id)->get();
+            $groups = Group::where('campus_id', $admin->campus_id)->get();
         } elseif ($teacher) {
-            $groups = Groups::where('campus_id', $teacher->campus_id)->get();
+            $groups = Group::where('campus_id', $teacher->campus_id)->get();
         } else {
             return Response::json(['message' => 'El usuario no es ni administrador ni profesor']);
         }
