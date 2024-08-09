@@ -18,15 +18,28 @@ class TeachersController extends Controller
     public function getTeachers()
     {
         $user = Auth::user();
+
         $admin = Admin::where('user_id', $user->id)->first();
         $campus = Campus::where('id', $admin->campus_id)->first();
+
         if (!$campus) {
             return Response::json(['message' => 'Campus no encontrado'], 404);
         }
-        $activeTeachers = Teacher::where('active', true)->where('campus_id', $admin->campus_id)->select('id', 'name', 'phone')->get();
-        foreach ($activeTeachers as $teacher) {
-            $teacher->campus = $campus->campus_number;
-        }
+
+        $activeTeachers = Teacher::where('campus_id', $admin->campus_id)
+            ->with('user:id,name,email')
+            ->select('id', 'phone', 'user_id')    
+            ->get();
+
+
+        $activeTeachers->transform(function ($teacher) use ($campus) {
+            return [
+                'id' => $teacher->id,
+                'nombre' => $teacher->user->name,
+                'telefono' => $teacher->phone,
+                'plantel' => $campus->campus_number,
+            ];
+        });
 
         return Response::json($activeTeachers, 200);
     }
@@ -34,21 +47,18 @@ class TeachersController extends Controller
 
     public function getTeacherById($id)
     {
-        $teacher = Teacher::where('id', $id)->select('name', 'phone', 'user_id')->first();
+        $teacher = Teacher::where('id', $id)
+            ->with('user')
+            ->select('phone', 'user_id')->first();
 
         if (!$teacher) {
             return Response::json(['message' => 'Docente no encontrado']);
         }
-        $user = User::where('id', $teacher->user_id)->select('email')->first();
-
-        if (!$user) {
-            return Response::json(['message' => 'Usuario de docente no encontrado']);
-        }
 
         return Response::json([
-            'name' => $teacher->name,
+            'name' => $teacher->user->name,
             'phone' => $teacher->phone,
-            'email' => $user->email
+            'email' => $teacher->user->email
         ], 200);
     }
 
@@ -73,14 +83,15 @@ class TeachersController extends Controller
             return Response::json(['message' => 'Docente no encontrado']);
         }
 
-        $teacher->update($request->only('name', 'phone'));
+        $teacher->update($request->only('name'));
+       
         $user = User::where('id', $teacher->user_id);
 
         if (!$user) {
             return Response::json(['message' => 'Usuario de docente no encontrado']);
         }
 
-        $user->update($request->only('email'));
+        $user->update($request->only('name','email'));
 
         return Response::json(["message" => 'Los datos se han actualizado correctamente'], 200);
     }
@@ -96,7 +107,9 @@ class TeachersController extends Controller
         if (!$user) {
             return Response::json(['message' => 'Usuario del docente no encontrado'], 404);
         }
+       
         $teacher->delete();
+       
         $user->delete();
 
         return Response::json(['message' => 'Docente eliminado correctamente'], 200);

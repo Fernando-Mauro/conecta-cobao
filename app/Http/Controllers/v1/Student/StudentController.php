@@ -26,7 +26,7 @@ class StudentController extends Controller
 
     public function getStudentById($id): JsonResponse
     {
-        $student = Student::where('id', $id)->select('curp','phone', 'enrollment', 'id', 'group_id', 'user_id')->first();
+        $student = Student::where('id', $id)->select('curp', 'phone', 'enrollment', 'id', 'group_id', 'user_id')->first();
 
         if (!$student) {
             return Response::json(['message' => 'Estudiante no encontrado'], 404);
@@ -45,7 +45,7 @@ class StudentController extends Controller
         }
 
         $tutor = Tutor::where('id', $tutorStudent->tutor_id)->first();
-        
+
         if (!$tutor) {
             return Response::json(['message' => 'Tutor no encontrado'], 404);
         }
@@ -111,22 +111,34 @@ class StudentController extends Controller
     public function getAllStudentsByCampus()
     {
         $user = Auth::user();
+
         if (!$user) {
             return Response::json(['message' => 'Invalid credentials'], 401);
         }
+
         $admin = Admin::where('user_id', $user->id)->first();
+
         $campus = Campus::where('id', $admin->campus_id)->first();
+
         if (!$campus) {
             return Response::json(['message' => 'Campus no encontrado'], 404);
         }
-        $students = Student::where('campus_id', $admin->campus_id)->select('name', 'group_id', 'enrollment', 'id')->get();
-        foreach ($students as $student) {
-            $group = Group::where('id', $student->group_id)->first();
-            if ($group) {
-                $student->group = $group->name;
-            }
-            $student->campus = $campus->campus_number;
-        }
+
+        $students = Student::where('campus_id', $admin->campus_id)
+            ->with(['user:id,name', 'group:id,name']) // Cargar las relaciones 'user' y 'group'
+            ->select('user_id', 'group_id', 'enrollment', 'id')
+            ->get();
+
+
+        $students->transform(function ($student) use ($campus) {
+            return [
+                'id' => $student->id,
+                'name' => $student->user->name,
+                'enrollment' => $student->enrollment,
+                'group' => $student->group->name,
+                'campus' => $campus->campus_number,
+            ];
+        });
         return Response::json($students, 200);
     }
 
@@ -157,11 +169,11 @@ class StudentController extends Controller
                 ->selectRaw('id, curp, enrollment as matricula, phone as telefono, user_id')
                 ->get();
             // Obtener a los usuarios de cada estudiante para tener el nombre, unirlos con los estudiantes y regresar todo
-            
+
             $response = [];
             foreach ($students as $student) {
                 // push the student to the response
-                
+
                 $response[] = [
                     'id' => $student->id,
                     'nombre' => User::where('id', $student->user_id)->first()->name,
@@ -169,7 +181,6 @@ class StudentController extends Controller
                     'telefono' => $student->telefono,
                     'curp' => $student->curp
                 ];
-                
             }
 
             return Response::json($response, 200);

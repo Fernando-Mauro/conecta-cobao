@@ -152,6 +152,7 @@ Route::prefix('v1')->group(function () {
     
     Route::middleware(['jwt.verify', 'role:admin'])->group(function () {
         Route::apiResource('subjects', \App\Http\Controllers\v1\Subject\SubjectController::class);
+        Route::apiResource('levels', \App\Http\Controllers\v1\Level\LevelController::class);
     });    
 
 });

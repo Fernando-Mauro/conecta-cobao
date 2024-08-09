@@ -8,6 +8,7 @@ use App\Models\Campus;
 use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 
@@ -65,7 +66,6 @@ class SubjectController extends Controller
         $campus = $result;
 
         $subjects = $campus->subjects;
-
         return response()->json($subjects, 200);
     }
 
@@ -76,7 +76,7 @@ class SubjectController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
-            'level' => 'required|string|max:30'
+            'level_id' => 'required|integer'
         ]);
 
         if ($validator->fails()) {
@@ -91,11 +91,13 @@ class SubjectController extends Controller
 
         $campus = $result;
 
+        Log::channel('daily')->info('Creating subject', ['name' => $request->name, 'level_id' => $request->level_id]);
+
         try {
             $subject = Subject::create([
                 'name' => $request->name,
                 'campus_id' => $campus->id,
-                'level' => $request->level
+                'level_id' => $request->level_id
             ]);
 
             return response()->json([

@@ -48,4 +48,13 @@ class Student extends Model
         return $this->hasMany(Report::class, 'student_id', 'id');
     }
     
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class, 'group_id', 'id');
+    }
+
+    public function campus(): BelongsTo
+    {
+        return $this->belongsTo(Campus::class, 'campus_id', 'id');
+    }
 }

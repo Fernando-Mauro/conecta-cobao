@@ -12,7 +12,7 @@ class Subject extends Model
     protected $fillable = [
         'name',
         'campus_id',
-        'level',
+        'level_id',
     ];
     public function groupTeachers()
     {
