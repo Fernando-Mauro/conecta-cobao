@@ -92,4 +92,21 @@ class LevelController extends Controller
     {
         // TODO: Implement destroy() method.
     }
+
+    public function getSubjects($levelId)
+    {
+        
+        $level = Level::with('subjects')->findOrFail($levelId);
+        
+        // Retornar las materias
+        return response()->json($level->subjects, 200);
+    }
+
+    public function getGroups($levelId)
+    {
+        $level = Level::with('groups')->findOrFail($levelId);
+        
+        // Retornar los grupos
+        return response()->json($level->groups, 200);
+    }
 }

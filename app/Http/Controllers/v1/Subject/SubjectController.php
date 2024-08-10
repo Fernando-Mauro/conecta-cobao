@@ -64,7 +64,6 @@ class SubjectController extends Controller
         }
 
         $campus = $result;
-
         $subjects = $campus->subjects;
         return response()->json($subjects, 200);
     }
