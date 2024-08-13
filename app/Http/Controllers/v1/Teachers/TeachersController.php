@@ -5,10 +5,14 @@ namespace App\Http\Controllers\v1\Teachers;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\Campus;
+use App\Models\Group;
+use App\Models\GroupSubjectTeacher;
+use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 
@@ -113,5 +117,65 @@ class TeachersController extends Controller
         $user->delete();
 
         return Response::json(['message' => 'Docente eliminado correctamente'], 200);
+    }
+
+    public function assignSubject(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'teacher_id' => 'required|integer',
+            'subject_id' => 'required|integer',
+            'groups' => 'required|array',
+        ]); 
+
+        if ($validator->fails()) {
+            $messages = $validator->messages()->all();
+            $messageStr = implode(" ", $messages);
+            return Response::json(["message" => $messageStr], 400);
+        }
+
+        $teacher = Teacher::find($request->teacher_id);
+
+        if (!$teacher) {
+            return Response::json(['message' => 'Docente no encontrado'], 404);
+        }
+
+        $subject = Subject::find($request->subject_id);
+        
+        if(!$subject){
+            return Response::json(['message' => 'Materia no encontrada'], 404);
+        }
+
+        try{
+
+            DB::beginTransaction();
+            
+            foreach ($request->groups as $groupId) {
+    
+                $group = Group::find($groupId);
+                
+                if(!$group)
+                    throw new \Exception('Grupo no encontrado');
+                
+                
+                $groupSubjectTeacher = GroupSubjectTeacher::where('group_id', $groupId)
+                    ->where('subject_id', $request->subject_id)
+                    ->where('teacher_id', $request->teacher_id)
+                    ->first();
+                
+                if($groupSubjectTeacher)
+                    continue;
+
+                GroupSubjectTeacher::create([
+                    'group_id' => $groupId,
+                    'subject_id' => $request->subject_id,
+                    'teacher_id' => $request->teacher_id
+                ]);
+            }
+            DB::commit();
+            return Response::json(['message' => 'Materia asignada correctamente'], 200);
+        }catch(\Exception $e){
+            DB::rollBack();
+            return Response::json(['message' => $e->getMessage()], 500);
+        }
     }
 }

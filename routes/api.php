@@ -131,9 +131,10 @@ Route::prefix('v1')->group(function () {
     Route::prefix('/teachers')->group(function () {
         Route::middleware('jwt.verify', 'role:admin')->group(function () {
             Route::get('/', 'App\Http\Controllers\v1\Teachers\TeachersController@getTeachers');
-            Route::get('/{id}', 'App\Http\Controllers\v1\Teachers\TeachersController@getTeacherById');
             Route::post('/', 'App\Http\Controllers\v1\Teachers\TeachersRegistrationController@registerTeacher');
+            Route::post('/assignSubject', 'App\Http\Controllers\v1\Teachers\TeachersController@assignSubject');
             Route::post('/massiveLoad', 'App\Http\Controllers\v1\Teachers\TeachersRegistrationController@registerTeachers');
+            Route::get('/{id}', 'App\Http\Controllers\v1\Teachers\TeachersController@getTeacherById');
             Route::patch('/{id}', 'App\Http\Controllers\v1\Teachers\TeachersController@editTeacherById');
             Route::delete('/{id}', 'App\Http\Controllers\v1\Teachers\TeachersController@deleteTeacherById');
         });
@@ -141,10 +142,10 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('jwt.verify', 'role:admin')->group(function () {
         Route::prefix('/tutors')->group(function () {
-            Route::get('/{id}', 'App\Http\Controllers\v1\Tutor\TutorController@getTutorById');
             Route::post('/', 'App\Http\Controllers\v1\Tutor\TutorsRegistrationController@registerTutor');
             Route::post('/massiveLoad', 'App\Http\Controllers\v1\Tutor\TutorsRegistrationController@registerTutors');
             Route::get('/group/{group}', 'App\Http\Controllers\v1\Tutor\TutorController@getTutorsByGroup');
+            Route::get('/{id}', 'App\Http\Controllers\v1\Tutor\TutorController@getTutorById');
             Route::patch('/{id}', 'App\Http\Controllers\v1\Tutor\TutorController@editTutorById');
             Route::delete('/{id}', 'App\Http\Controllers\v1\Tutor\DeleteTutorController@deleteTutorById');
         });
