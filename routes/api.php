@@ -150,4 +150,15 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}', 'App\Http\Controllers\v1\Tutor\DeleteTutorController@deleteTutorById');
         });
     });
+
+    Route::prefix('whatsapp')->group(function () {
+        Route::get('webhook', 'App\Http\Controllers\v1\Whatsapp\WhatsappController@receive');
+        Route::get('holaMundo', 'App\Http\Controllers\v1\Whatsapp\WhatsappController@holaMundo');
+
+        // Get is used to verify endpoint
+        Route::get('handle', 'App\Http\Controllers\v1\Whatsapp\WhatsappController@verifyWebhook');
+        // Post is used to handle request
+        Route::post('handle', 'App\Http\Controllers\v1\Whatsapp\WhatsappController@handle');
+
+    });
 });

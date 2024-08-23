@@ -54,16 +54,17 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        Log::info('AuthController@login');
         $credentials = $request->only('email', 'password');
         try {
             if (!$token = JWTAuth::attempt($credentials)) {
                 return Response::json(['error' => 'Credenciales invalidas'], 401);
             }
         } catch (JWTException $e) {
+            Log::debug($e->getMessage());
             return response()->json(['error' => 'No se puede crear el token'], 500);
         }
         $user = Auth::user();
-
         $role = $user->roles;
 
         $expirationTimeInMinutes = 30 * 24 * 60;
