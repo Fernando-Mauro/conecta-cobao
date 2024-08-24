@@ -7,6 +7,7 @@ use App\Models\Campus;
 use App\Models\Group;
 use App\Models\Student;
 use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
