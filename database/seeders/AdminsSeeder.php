@@ -26,7 +26,7 @@ class AdminsSeeder extends Seeder
             ],
             [
                 'nombre' => 'Fernando Francisco López Mauro',
-                'telefono' => '9513947132',
+                'telefono' => '9512174412',
                 'correo' => 'lopezmauro1973f@gmail.com',
                 'campus' => 4
             ],
