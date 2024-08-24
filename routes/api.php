@@ -53,8 +53,6 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::prefix('/students')->group(function () {
-
-        
         Route::middleware('jwt.verify', 'role:admin')->group(function () {
             Route::get('/getAllStudentsByCampus', 'App\Http\Controllers\v1\Student\StudentController@getAllStudentsByCampus');
             Route::post('/', 'App\Http\Controllers\v1\Student\StudentRegistrationController@registerStudent');
@@ -74,7 +72,7 @@ Route::prefix('v1')->group(function () {
         
         Route::middleware('jwt.verify','role:admin')->group(function(){
             Route::get('{enrollment}/checksByPeriod', 'App\Http\Controllers\v1\Student\StudentController@getChecksByPeriod');
-            Route::get('{enrollment}/register_check', 'App\Http\Controllers\v1\Student\StudentCheckController@registerStudentCheckByEnrollment');
+            Route::get('{identifier}/register_check', 'App\Http\Controllers\v1\Student\StudentCheckController@registerStudentCheck');
         });    
     });
     

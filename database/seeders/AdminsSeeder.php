@@ -24,6 +24,12 @@ class AdminsSeeder extends Seeder
                 'correo' => 'fermaurolf@gmail.com',
                 'campus' => 32
             ],
+            [
+                'nombre' => 'Fernando Francisco López Mauro',
+                'telefono' => '9513947132',
+                'correo' => 'lopezmauro1973f@gmail.com',
+                'campus' => 4
+            ],
         ];
 
         foreach($adminsData as $admin){

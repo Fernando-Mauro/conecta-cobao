@@ -27,6 +27,11 @@ class LevelsSeeder extends Seeder
                 'name' => $level,
                 'campus_id' => 1
             ]);
+            
+            Level::create([
+                'name' => $level,
+                'campus_id' => 2
+            ]);
         }
     }
 }
