@@ -37,7 +37,7 @@ class TutorsRegistrationController extends Controller
                 $user = User::create([
                     'name' => ($name == "NULL") ? "Desconocido" : $name,
                     'email' => ($email == "NULL") ? "Desconocido" : $email,
-                    'password' => Hash::make($password)
+                    'password' => $password
                 ]);
 
                 $role = Role::where('name', 'tutor')->first();
