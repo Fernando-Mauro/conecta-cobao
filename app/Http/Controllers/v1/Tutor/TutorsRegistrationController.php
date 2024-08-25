@@ -85,7 +85,6 @@ class TutorsRegistrationController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'phone' => 'required|string',
-            'campus' => 'required|integer',
             'email' => 'required|string',
             'password' => 'required|string',
             'curp' => [
@@ -130,7 +129,6 @@ class TutorsRegistrationController extends Controller
         $validator = Validator::make($request->all(), [
             '*.nombre' => 'required|string',
             '*.telefono' => 'required|string',
-            '*.plantel' => 'required|integer',
             '*.email' => 'required|string',
             '*.contraseña' => 'required|string',
             '*.curp' => [
