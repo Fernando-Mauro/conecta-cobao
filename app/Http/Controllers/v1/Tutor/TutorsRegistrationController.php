@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\v1\Tutor;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
 use App\Models\Campus;
 use App\Models\Student;
 use App\Models\Tutor;
@@ -11,6 +12,7 @@ use App\Models\User;
 use App\Traits\StudentTrait;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
@@ -22,7 +24,7 @@ class TutorsRegistrationController extends Controller
 
     use StudentTrait;
 
-    public function createTutor($name, $phone, $campusNumber, $email, $password, $curp)
+    public function createTutor($name, $phone, $campusId, $email, $password, $curp)
     {
         try {
 
@@ -48,7 +50,7 @@ class TutorsRegistrationController extends Controller
 
                 $tutor = Tutor::create([
                     'phone' => ($phone == "NULL") ? "Desconocido" : $phone,
-                    'campus_id' => Campus::where('campus_number', $campusNumber)->first()->id,
+                    'campus_id' => $campusId,
                     'user_id' => $user->id
                 ]);
             }
@@ -101,14 +103,16 @@ class TutorsRegistrationController extends Controller
         }
 
         try {
+            $admin = Auth::user();
+            $campusId = Admin::where('user_id', $admin->id)->first()->campus_id;
+
             $name = $request->input('name');
             $phone = $request->input('phone');
-            $campusNumber = $request->input('campus');
             $email = $request->input('email');
             $password = $request->input('password');
             $curp = $request->input('curp');
 
-            $this->createTutor($name, $phone, $campusNumber, $email, $password, $curp);
+            $this->createTutor($name, $phone, $campusId, $email, $password, $curp);
 
             return Response::json([
                 'message' => 'Tutor registrado correctamente',
@@ -140,15 +144,18 @@ class TutorsRegistrationController extends Controller
 
         try {
 
+            $admin = Auth::user();
+            $campusId = Admin::where('user_id', $admin->id)->first()->campus_id;
+            
             foreach ($request->all() as $tutorRequest) {
                 Log::channel('daily')->debug('intentando generar tutores');
                 $name = $tutorRequest['nombre'];
                 $phone = $tutorRequest['telefono'];
-                $campusNumber = $tutorRequest['plantel'];
+                // $campusNumber = $tutorRequest['plantel'];
                 $email = $tutorRequest['email'];
                 $password = $tutorRequest['contraseña'];
                 $curp = $tutorRequest['curp'];
-                $this->createTutor($name, $phone, $campusNumber, $email, $password, $curp);
+                $this->createTutor($name, $phone, $campusId, $email, $password, $curp);
             }
 
             return Response::json([
