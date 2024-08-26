@@ -16,6 +16,7 @@ use Illuminate\Validation\Rule;
 use App\Traits\StudentTrait;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; // Importar para usar transacciones
 
 class StudentRegistrationController extends Controller
 {
@@ -25,15 +26,15 @@ class StudentRegistrationController extends Controller
     {
         $admin = Auth::user();
         $campusId = Admin::where('user_id', $admin->id)->first()->campus_id;
-    
+
         $groupId = Group::where('name', $groupNumber)->where('campus_id', $campusId)->first()->id;
-        
+
         $user = User::create([
             'name' => $name,
             'email' => $enrollment,
             'password' => Hash::make($curp),
         ]);
-    
+
         Student::create([
             'phone' => $phone,
             'group_id' => $groupId,
@@ -53,15 +54,15 @@ class StudentRegistrationController extends Controller
             'enrollment' => ['required'],
             'curp' => ['required']
         ]);
-        
+
         if ($validator->fails()) {
             return Response::json(["message" => 'Error en el formato de los datos'], 400);
         }
-        
+
         if (!$this->isValidEnrollment($request->input('enrollment'))) {
             return Response::json(["message" => "Matricula invalida"], 400);
         }
-    
+
         try {
             $name = $request->input('name');
             $phone = $request->input('phone');
@@ -69,7 +70,7 @@ class StudentRegistrationController extends Controller
             $enrollment = $request->input('enrollment');
             $curp = $request->input('curp');
             $this->createStudent($name, $phone, $groupNumber, $enrollment, $curp);
-    
+
             return Response::json([
                 'message' => 'Estudiante registrado correctamente'
             ], 200);
@@ -97,11 +98,14 @@ class StudentRegistrationController extends Controller
             ],
             '*.curp' => 'required',
         ]);
-    
+
         if ($validator->fails()) {
             return Response::json(["message" => 'Error en el formato de los datos'], 400);
         }
-    
+
+        // Iniciar transacción
+        DB::beginTransaction();
+
         try {
             foreach ($request->all() as $studentRequest) {
                 Log::channel('daily')->info('voy a intentar crear un student');
@@ -112,11 +116,16 @@ class StudentRegistrationController extends Controller
                 $curp = $studentRequest['curp'];
                 $this->createStudent($name, $phone, $groupNumber, $enrollment, $curp);
             }
-    
+
+            // Si todo va bien, commit de la transacción
+            DB::commit();
+
             return Response::json([
                 'message' => 'Estudiantes registrados correctamente'
             ], 200);
         } catch (\Exception $e) {
+            // Si ocurre un error, rollback de la transacción
+            DB::rollBack();
             Log::channel('daily')->error('Error al crear los estudiantes: ' . $e->getMessage());
             return Response::json([
                 'message' => 'Error al crear los estudiantes: ' . $e->getMessage()

@@ -24,7 +24,7 @@ class TutorsRegistrationController extends Controller
 
     use StudentTrait;
 
-    public function createTutor($name, $phone, $campusId, $email, $password, $curp)
+    public function createTutor($name, $phone, $campusId, $email, $password, $curp, $telegram)
     {
         try {
 
@@ -37,7 +37,7 @@ class TutorsRegistrationController extends Controller
                 $user = User::create([
                     'name' => ($name == "NULL") ? "Desconocido" : $name,
                     'email' => ($email == "NULL") ? "Desconocido" : $email,
-                    'password' => Hash::make($password)
+                    'password' =>  Hash::make($password)
                 ]);
 
                 $role = Role::where('name', 'tutor')->first();
@@ -51,7 +51,8 @@ class TutorsRegistrationController extends Controller
                 $tutor = Tutor::create([
                     'phone' => ($phone == "NULL") ? "Desconocido" : $phone,
                     'campus_id' => $campusId,
-                    'user_id' => $user->id
+                    'user_id' => $user->id,
+                    'telegram_chat_id' => ($telegram != 0) ? $telegram : NULL
                 ]);
             }
 
@@ -85,7 +86,6 @@ class TutorsRegistrationController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'phone' => 'required|string',
-            'campus' => 'required|integer',
             'email' => 'required|string',
             'password' => 'required|string',
             'curp' => [
@@ -130,7 +130,6 @@ class TutorsRegistrationController extends Controller
         $validator = Validator::make($request->all(), [
             '*.nombre' => 'required|string',
             '*.telefono' => 'required|string',
-            '*.plantel' => 'required|integer',
             '*.email' => 'required|string',
             '*.contraseña' => 'required|string',
             '*.curp' => [
@@ -155,7 +154,8 @@ class TutorsRegistrationController extends Controller
                 $email = $tutorRequest['email'];
                 $password = $tutorRequest['contraseña'];
                 $curp = $tutorRequest['curp'];
-                $this->createTutor($name, $phone, $campusId, $email, $password, $curp);
+                $telegram = $tutorRequest['telegram'];
+                $this->createTutor($name, $phone, $campusId, $email, $password, $curp, $telegram);
             }
 
             return Response::json([
