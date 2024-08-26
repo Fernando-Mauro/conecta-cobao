@@ -22,7 +22,7 @@ class AdminRegistrationController extends Controller
             $user = User::create([
                 'name' => $name,
                 'email' => $email,
-                'password' => $password
+                'password' => Hash::make($password)
             ]);
 
             $role = Role::where('name', 'admin')->first();
@@ -62,7 +62,6 @@ class AdminRegistrationController extends Controller
 
             $name = $request->input('name');
             $phone = $request->input('phone');
-            $campus = $request->input('campus');
             $email = $request->input('email');
             $password = $request->input('password');
 
@@ -99,7 +98,6 @@ class AdminRegistrationController extends Controller
             foreach ($request->all() as $adminsRequest) {
                 $name = $adminsRequest['nombre'];
                 $phone = $adminsRequest['telefono'];
-                $campus = $adminsRequest['plantel'];
                 $email = $adminsRequest['email'];
                 $password = $adminsRequest['contraseña'];
                 $this->createAdmin($name, $phone, $campusId, $email, $password);
