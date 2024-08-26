@@ -40,7 +40,7 @@ class StudentCheckController extends Controller
     {
         try {
             // Validar si es matrícula o CURP
-            $student = null;
+            // $student = null;
     
             if ($this->isValidEnrollment($identifier)) {
                 $student = Student::where('enrollment', $identifier)->first();
