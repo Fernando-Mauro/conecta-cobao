@@ -32,9 +32,7 @@ class AdminRegistrationController extends Controller
             $user->assignRole($role);
     
             Admin::create([
-                'name' => $user->name,
                 'phone' => $phone,
-                'email' => $email,
                 'campus_id' => $campusId,
                 'user_id' => $user->id
             ]);
