@@ -42,6 +42,8 @@ class StudentCheckController extends Controller
             // Validar si es matrícula o CURP
             // $student = null;
     
+            Log::channel('daily')->info('Identificador recibido: ' . $identifier);
+
             if ($this->isValidEnrollment($identifier)) {
                 $student = Student::where('enrollment', $identifier)->first();
             } elseif ($this->isValidCurp($identifier)) {
