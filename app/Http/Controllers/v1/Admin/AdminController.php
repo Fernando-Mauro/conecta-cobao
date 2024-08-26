@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\v1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\MassiveMessages;
+use App\Jobs\SendMessage;
 use App\Models\Admin;
 use App\Models\Group;
 use App\Models\Groups;
@@ -70,10 +72,7 @@ class AdminController extends Controller
         
         foreach($tutors as $tutor){
             if($tutor->telegram_chat_id)
-                Telegram::sendMessage([
-                    'chat_id' => $tutor->telegram_chat_id,
-                    'text' => $request->input('message')
-                ]);
+                MassiveMessages::dispatch($request->input('message'), $tutor->telegram_chat_id)->onQueue('massiveMessages');
         }
 
         return Response::json('Mensajes enviados correctamente', 200);
