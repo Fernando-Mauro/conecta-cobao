@@ -8,6 +8,7 @@ use App\Models\Campus;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
@@ -35,6 +36,7 @@ class AdminRegistrationController extends Controller
                 'campus_id' => $campusId,
                 'user_id' => $user->id
             ]);
+
             Log::channel('daily')->info('El admin se creó');
         } catch (\Exception $e) {
             return Response::json([
@@ -55,8 +57,10 @@ class AdminRegistrationController extends Controller
         if ($validator->fails()) {
             return Response::json(["message" => 'Error en el formato de los datos'], 400);
         }
+        DB::beginTransaction();
 
         try {
+
             $userId = Auth::id();
             $campusId = Admin::where('user_id', $userId)->first()->campus_id;
 
@@ -66,11 +70,13 @@ class AdminRegistrationController extends Controller
             $password = $request->input('password');
 
             $this->createAdmin($name, $phone, $campusId, $email, $password);
+            DB::commit();
 
             return Response::json([
                 'message' => 'Administrador registrado correctamente',
             ], 200);
         } catch (\Exception $e) {
+            DB::rollBack();
             return Response::json([
                 'message' => 'Error al enviar el administrador'
             ], 400);
