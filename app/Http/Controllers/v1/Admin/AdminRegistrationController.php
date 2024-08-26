@@ -7,6 +7,7 @@ use App\Models\Admin;
 use App\Models\Campus;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
@@ -15,13 +16,13 @@ use Spatie\Permission\Models\Role;
 
 class AdminRegistrationController extends Controller
 {
-    public function createAdmin($name, $phone, $campus, $email, $password)
+    public function createAdmin($name, $phone, $campusId, $email, $password)
     {
         try {
             $user = User::create([
                 'name' => $name,
                 'email' => $email,
-                'password' => Hash::make($password)
+                'password' => $password
             ]);
 
             $role = Role::where('name', 'admin')->first();
@@ -31,7 +32,7 @@ class AdminRegistrationController extends Controller
                 'name' => $user->name,
                 'phone' => $phone,
                 'email' => $email,
-                'campus_id' => Campus::where('campus_number', $campus)->first()->id,
+                'campus_id' => $campusId,
                 'user_id' => $user->id
             ]);
             Log::channel('daily')->info('El admin se creó');
@@ -56,6 +57,8 @@ class AdminRegistrationController extends Controller
         }
 
         try {
+            $userId = Auth::id();
+            $campusId = Admin::where('id', $userId)->first()->campus_id;
 
             $name = $request->input('name');
             $phone = $request->input('phone');
@@ -63,7 +66,7 @@ class AdminRegistrationController extends Controller
             $email = $request->input('email');
             $password = $request->input('password');
 
-            $this->createAdmin($name, $phone, $campus, $email, $password);
+            $this->createAdmin($name, $phone, $campusId, $email, $password);
 
             return Response::json([
                 'message' => 'Administrador registrado correctamente',
@@ -90,13 +93,16 @@ class AdminRegistrationController extends Controller
         }
 
         try {
+            $userId = Auth::id();
+            $campusId = Admin::where('id', $userId)->first()->campus_id;
+
             foreach ($request->all() as $adminsRequest) {
                 $name = $adminsRequest['nombre'];
                 $phone = $adminsRequest['telefono'];
                 $campus = $adminsRequest['plantel'];
                 $email = $adminsRequest['email'];
                 $password = $adminsRequest['contraseña'];
-                $this->createAdmin($name, $phone, $campus, $email, $password);
+                $this->createAdmin($name, $phone, $campusId, $email, $password);
             }
 
 
