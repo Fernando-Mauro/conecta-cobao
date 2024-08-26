@@ -111,8 +111,8 @@ class TutorsRegistrationController extends Controller
             $email = $request->input('email');
             $password = $request->input('password');
             $curp = $request->input('curp');
-
-            $this->createTutor($name, $phone, $campusId, $email, $password, $curp);
+            
+            $this->createTutor($name, $phone, $campusId, $email, $password, $curp, 0);
 
             return Response::json([
                 'message' => 'Tutor registrado correctamente',

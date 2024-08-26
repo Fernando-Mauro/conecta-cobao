@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Telegram\Bot\Laravel\Facades\Telegram;
 
 class AdminController extends Controller
 {
@@ -50,6 +51,33 @@ class AdminController extends Controller
             });
 
         return Response::json($admins, 200);
+    }
+    
+    public function sendMassiveMessages(Request $request){
+        $validator = Validator::make($request->all(), [
+            'message' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return Response::json(['message' => 'Error en la petición'], 400);
+        }
+
+        $userId = Auth::id();
+
+        $campusId = Admin::where('user_id', $userId)->first()->campus_id;
+
+        $tutors = Tutor::where('campus_id', $campusId)->get();
+        
+        foreach($tutors as $tutor){
+            if($tutor->telegram_chat_id)
+                Telegram::sendMessage([
+                    'chat_id' => $tutor->telegram_chat_id,
+                    'text' => $request->input('message')
+                ]);
+        }
+
+        return Response::json('Mensajes enviados correctamente', 200);
+    
     }
 
     public function getAdminById($id)
