@@ -20,15 +20,17 @@ class AdminRegistrationController extends Controller
     public function createAdmin($name, $phone, $campusId, $email, $password)
     {
         try {
+            Log::channel('daily')->info('El id del campus es ' . $campusId);
+    
             $user = User::create([
                 'name' => $name,
                 'email' => $email,
                 'password' => Hash::make($password)
             ]);
-
+    
             $role = Role::where('name', 'admin')->first();
             $user->assignRole($role);
-            
+    
             Admin::create([
                 'name' => $user->name,
                 'phone' => $phone,
@@ -36,52 +38,56 @@ class AdminRegistrationController extends Controller
                 'campus_id' => $campusId,
                 'user_id' => $user->id
             ]);
-
+    
             Log::channel('daily')->info('El admin se creó');
         } catch (\Exception $e) {
-            return Response::json([
-                'message' => 'Error al enviar el administrador'
-            ], 400);
+            // Registramos el error antes de propagarlo
+            Log::channel('daily')->error('Error al crear el admin: ' . $e->getMessage());
+            // Lanza la excepción para que se maneje en el método que llama a este
+            throw $e;
         }
     }
+    
     public function registerAdmin(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'phone' => 'required|string',
             'campus' => 'required|integer',
-            'email' => 'required|string',
-            'password' => 'required|string'
+            'email' => 'required|string|email',
+            'password' => 'required|string|min:6'
         ]);
-
+    
         if ($validator->fails()) {
             return Response::json(["message" => 'Error en el formato de los datos'], 400);
         }
+    
         DB::beginTransaction();
-
+    
         try {
-
             $userId = Auth::id();
             $campusId = Admin::where('user_id', $userId)->first()->campus_id;
-
+    
             $name = $request->input('name');
             $phone = $request->input('phone');
             $email = $request->input('email');
             $password = $request->input('password');
-
+    
             $this->createAdmin($name, $phone, $campusId, $email, $password);
             DB::commit();
-
+    
             return Response::json([
                 'message' => 'Administrador registrado correctamente',
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::channel('daily')->error('Error al registrar el admin: ' . $e->getMessage());
             return Response::json([
                 'message' => 'Error al enviar el administrador'
             ], 400);
         }
     }
+    
 
     public function registerAdmins(Request $request)
     {
