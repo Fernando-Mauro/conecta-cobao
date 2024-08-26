@@ -58,7 +58,7 @@ class AdminRegistrationController extends Controller
 
         try {
             $userId = Auth::id();
-            $campusId = Admin::where('id', $userId)->first()->campus_id;
+            $campusId = Admin::where('user_id', $userId)->first()->campus_id;
 
             $name = $request->input('name');
             $phone = $request->input('phone');
@@ -93,7 +93,7 @@ class AdminRegistrationController extends Controller
 
         try {
             $userId = Auth::id();
-            $campusId = Admin::where('id', $userId)->first()->campus_id;
+            $campusId = Admin::where('user_id', $userId)->first()->campus_id;
 
             foreach ($request->all() as $adminsRequest) {
                 $name = $adminsRequest['nombre'];
