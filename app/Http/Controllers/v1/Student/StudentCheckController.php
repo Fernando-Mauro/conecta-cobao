@@ -9,6 +9,7 @@ use App\Models\StudentCheckIn;
 use App\Models\StudentCheckOut;
 use App\Models\Tutor;
 use App\Models\TutorStudent;
+use App\Models\User;
 use App\Traits\StudentTrait;
 use Carbon\Carbon;
 use Exception;
@@ -38,11 +39,7 @@ class StudentCheckController extends Controller
 
     public function registerStudentCheck(Request $request, $identifier)
     {
-        try {
-            // Validar si es matrícula o CURP
-            // $student = null;
-    
-            Log::channel('daily')->info('Identificador recibido: ' . $identifier);
+        try {    
 
             if ($this->isValidEnrollment($identifier)) {
                 $student = Student::where('enrollment', $identifier)->first();
@@ -93,6 +90,7 @@ class StudentCheckController extends Controller
     public function notifyTutor($student, $message)
     {
         $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
+        
         if ($tutorStudent) {
             $tutor = Tutor::find($tutorStudent->tutor_id);
             if ($tutor) {
