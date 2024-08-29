@@ -227,7 +227,7 @@ class TelegramController extends Controller
     public function handleDeletion($identifier, $chatId)
     {   
         // TODO: Implementar borrar el número para el maestro
-        if($this->isValidEnrollment($identifier)){
+        if(!$this->isValidEnrollment($identifier)){
             Telegram::sendMessage([
                 'chat_id' => $chatId,
                 'text' => 'La matrícula proporcionada no es válida ' . "\n" . 'Ingresa de nuevo la matrícula.'
