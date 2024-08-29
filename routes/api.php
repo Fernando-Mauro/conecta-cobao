@@ -156,4 +156,7 @@ Route::prefix('v1')->group(function () {
         Route::get('levels/{level}/groups', [\App\Http\Controllers\v1\Level\LevelController::class, 'getGroups']);
     });    
 
+    Route::middleware(['jwt.verify', 'role:admin'])->group(function(){
+        require __DIR__ . '/apiRoutes/users.php';
+    });
 });
