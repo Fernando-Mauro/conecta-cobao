@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('admins', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->string('email')->unique();
+            // $table->string('name')->unique();
+            // $table->string('email')->unique();
             $table->string('phone')->unique();
             
             $table->boolean('active')->default(true);

@@ -24,7 +24,14 @@ class AdminsSeeder extends Seeder
                 'correo' => 'fermaurolf@gmail.com',
                 'campus' => 32
             ],
+            [
+                'nombre' => 'Fernando Francisco López Mauro',
+                'telefono' => '9512174412',
+                'correo' => 'lopezmauro1973f@gmail.com',
+                'campus' => 4
+            ],
         ];
+
         foreach($adminsData as $admin){
             $password = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6);
 
@@ -36,9 +43,7 @@ class AdminsSeeder extends Seeder
 
             
             Admin::create([
-                'name' => $user->name,
                 'phone' => $admin['telefono'],
-                'email' => $admin['correo'],
                 'campus_id' => Campus::where('campus_number', $admin['campus'])->first()->id,
                 'user_id' => $user->id
             ]);

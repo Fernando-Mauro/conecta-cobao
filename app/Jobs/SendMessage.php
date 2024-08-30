@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Student;
 use App\Models\Tutor;
 use App\Models\TutorStudent;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -37,15 +38,17 @@ class SendMessage implements ShouldQueue
     {
         $tutorStudent = TutorStudent::where('student_id', $this->student->id)->first();
 
+        $studentName = User::where('id', $this->student->user_id)->first()->name;
+        
         if ($tutorStudent) {
             $tutor = Tutor::find($tutorStudent->tutor_id);
             if ($tutor) {
-                $name = $this->student->name;
+                // $name = $this->student->name;
                 $telegram_chat_id = $tutor->telegram_chat_id;
                 if ($telegram_chat_id) {
                     Telegram::sendMessage([
                         'chat_id' => $tutor->telegram_chat_id,
-                        'text' => 'Se ha registrado una ' . $this->message . ' de ' . $name . ' a las ' . $this->time . ' horas'
+                        'text' => 'Se ha registrado una ' . $this->message . ' de ' . $studentName . ' a las ' . $this->time . ' horas'
                     ]);
                 }
             }

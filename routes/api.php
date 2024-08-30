@@ -24,8 +24,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/', 'App\Http\Controllers\v1\Admin\AdminRegistrationController@registerAdmin');
             Route::post('/massiveLoad', 'App\Http\Controllers\v1\Admin\AdminRegistrationController@registerAdmins');
             Route::get('/', 'App\Http\Controllers\v1\Admin\AdminController@getAllAdmins');
-            
-            
+            Route::post('/massiveMessage', 'App\Http\Controllers\v1\Admin\AdminController@sendMassiveMessages');
             // Get, edit and delete admin
             Route::prefix('/{id}')->group(function(){
                 Route::get('/', 'App\Http\Controllers\v1\Admin\AdminController@getAdminById');
@@ -54,8 +53,6 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::prefix('/students')->group(function () {
-
-        
         Route::middleware('jwt.verify', 'role:admin')->group(function () {
             Route::get('/getAllStudentsByCampus', 'App\Http\Controllers\v1\Student\StudentController@getAllStudentsByCampus');
             Route::post('/', 'App\Http\Controllers\v1\Student\StudentRegistrationController@registerStudent');
@@ -75,7 +72,7 @@ Route::prefix('v1')->group(function () {
         
         Route::middleware('jwt.verify','role:admin')->group(function(){
             Route::get('{enrollment}/checksByPeriod', 'App\Http\Controllers\v1\Student\StudentController@getChecksByPeriod');
-            Route::get('{enrollment}/register_check', 'App\Http\Controllers\v1\Student\StudentCheckController@registerStudentCheckByEnrollment');
+            Route::get('{identifier}/register_check', 'App\Http\Controllers\v1\Student\StudentCheckController@registerStudentCheck');
         });    
     });
     
@@ -132,9 +129,10 @@ Route::prefix('v1')->group(function () {
     Route::prefix('/teachers')->group(function () {
         Route::middleware('jwt.verify', 'role:admin')->group(function () {
             Route::get('/', 'App\Http\Controllers\v1\Teachers\TeachersController@getTeachers');
-            Route::get('/{id}', 'App\Http\Controllers\v1\Teachers\TeachersController@getTeacherById');
             Route::post('/', 'App\Http\Controllers\v1\Teachers\TeachersRegistrationController@registerTeacher');
+            Route::post('/assignSubject', 'App\Http\Controllers\v1\Teachers\TeachersController@assignSubject');
             Route::post('/massiveLoad', 'App\Http\Controllers\v1\Teachers\TeachersRegistrationController@registerTeachers');
+            Route::get('/{id}', 'App\Http\Controllers\v1\Teachers\TeachersController@getTeacherById');
             Route::patch('/{id}', 'App\Http\Controllers\v1\Teachers\TeachersController@editTeacherById');
             Route::delete('/{id}', 'App\Http\Controllers\v1\Teachers\TeachersController@deleteTeacherById');
         });
@@ -142,10 +140,10 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('jwt.verify', 'role:admin')->group(function () {
         Route::prefix('/tutors')->group(function () {
-            Route::get('/{id}', 'App\Http\Controllers\v1\Tutor\TutorController@getTutorById');
             Route::post('/', 'App\Http\Controllers\v1\Tutor\TutorsRegistrationController@registerTutor');
             Route::post('/massiveLoad', 'App\Http\Controllers\v1\Tutor\TutorsRegistrationController@registerTutors');
             Route::get('/group/{group}', 'App\Http\Controllers\v1\Tutor\TutorController@getTutorsByGroup');
+            Route::get('/{id}', 'App\Http\Controllers\v1\Tutor\TutorController@getTutorById');
             Route::patch('/{id}', 'App\Http\Controllers\v1\Tutor\TutorController@editTutorById');
             Route::delete('/{id}', 'App\Http\Controllers\v1\Tutor\DeleteTutorController@deleteTutorById');
         });
@@ -159,6 +157,17 @@ Route::prefix('v1')->group(function () {
         Route::get('handle', 'App\Http\Controllers\v1\Whatsapp\WhatsappController@verifyWebhook');
         // Post is used to handle request
         Route::post('handle', 'App\Http\Controllers\v1\Whatsapp\WhatsappController@handle');
+    });
 
+
+    Route::middleware(['jwt.verify', 'role:admin'])->group(function () {
+        Route::apiResource('subjects', \App\Http\Controllers\v1\Subject\SubjectController::class);
+        Route::apiResource('levels', \App\Http\Controllers\v1\Level\LevelController::class);
+        Route::get('levels/{level}/subjects', [\App\Http\Controllers\v1\Level\LevelController::class, 'getSubjects']);
+        Route::get('levels/{level}/groups', [\App\Http\Controllers\v1\Level\LevelController::class, 'getGroups']);
+    });    
+
+    Route::middleware(['jwt.verify', 'role:admin'])->group(function(){
+        require __DIR__ . '/apiRoutes/users.php';
     });
 });

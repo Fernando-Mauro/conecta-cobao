@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('campus', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->integer('campus_number');
-            $table->mediumText('address');
-            $table->boolean('active')->default(true);
-            $table->timestamps();
+        Schema::table('conversation_status', function (Blueprint $table) {
+            $table->renameColumn('enrollment', 'identifier');
         });
     }
 
@@ -26,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('campus');
+        Schema::table('conversation_status', function (Blueprint $table) {
+            $table->renameColumn('identifier', 'enrollment');
+        });
     }
 };

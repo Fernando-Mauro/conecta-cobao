@@ -22,7 +22,8 @@ class DeleteTutorController extends Controller
     
         if($tutorStudent){
             return Response::json(['message' => 'Primero borra al alumno y después se podrá eliminar el tutor'], 400);
-        }        
+        }
+        
         $tutor->delete();
         
         return Response::json(['message' => 'Tutor eliminado correctamente']);

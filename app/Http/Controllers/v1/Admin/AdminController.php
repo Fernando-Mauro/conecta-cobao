@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\v1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\MassiveMessages;
+use App\Jobs\SendMessage;
 use App\Models\Admin;
+use App\Models\Group;
 use App\Models\Groups;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -14,6 +17,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Telegram\Bot\Laravel\Facades\Telegram;
 
 class AdminController extends Controller
 {
@@ -49,6 +53,30 @@ class AdminController extends Controller
             });
 
         return Response::json($admins, 200);
+    }
+    
+    public function sendMassiveMessages(Request $request){
+        $validator = Validator::make($request->all(), [
+            'message' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return Response::json(['message' => 'Error en la petición'], 400);
+        }
+
+        $userId = Auth::id();
+
+        $campusId = Admin::where('user_id', $userId)->first()->campus_id;
+
+        $tutors = Tutor::where('campus_id', $campusId)->get();
+        
+        foreach($tutors as $tutor){
+            if($tutor->telegram_chat_id)
+                MassiveMessages::dispatch($request->input('message'), $tutor->telegram_chat_id)->onQueue('massiveMessages');
+        }
+
+        return Response::json('Mensajes enviados correctamente', 200);
+    
     }
 
     public function getAdminById($id)
@@ -113,9 +141,9 @@ class AdminController extends Controller
         $teacher = Teacher::where('user_id', $userId)->first();
 
         if ($admin) {
-            $groups = Groups::where('campus_id', $admin->campus_id)->get();
+            $groups = Group::where('campus_id', $admin->campus_id)->get();
         } elseif ($teacher) {
-            $groups = Groups::where('campus_id', $teacher->campus_id)->get();
+            $groups = Group::where('campus_id', $teacher->campus_id)->get();
         } else {
             return Response::json(['message' => 'El usuario no es ni administrador ni profesor']);
         }

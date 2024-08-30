@@ -12,22 +12,20 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Telegram\Bot\Laravel\Facades\Telegram;
-use Spatie\ImageOptimizer\OptimizerChainFactory;
 
 class JustificationController extends Controller
 {
     public function postJustification(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'name' => 'required|string',
+            // 'email' => 'required|email',
+            // 'name' => 'required|string',
             'curp' => 'required|string',
-            'group' => 'required|string',
-            'enrollment' => 'required|string',
+            // 'group' => 'required|string',
+            // 'enrollment' => 'required|string',
             'start' => 'required|date',
             'end' => 'required|date',
             'tutor-name' => 'required|string',
@@ -39,8 +37,6 @@ class JustificationController extends Controller
         if ($validator->fails()) {
             return Response::json(['message' => 'Formato de datos invalidos'], 400);
         }
-
-        Log::channel('daily')->debug(json_encode($request->all()));
 
         // Obtén los archivos de las imágenes
         $office = $request->file('office');
@@ -66,9 +62,7 @@ class JustificationController extends Controller
         $tutor = Tutor::where('user_id', $userId)->first();
 
         // Obtener el estudiante por su matrícula o curp
-        $student = Student::where('enrollment', $request->input('enrollment'))
-            ->orWhere('curp', $request->input('curp'))
-            ->first();
+        $student = Student::where('curp', $request->input('curp'))->first();
 
         if (!$student) {
             return Response::json(['error' => 'No se encontró al estudiante'], 404);
@@ -81,7 +75,7 @@ class JustificationController extends Controller
         }
 
         // Crear la justificación
-        $justification = new Justification([
+        Justification::create([
             'student_id' => $student->id,
             'files_names' => $fileNames,
             'tutor_id' => $tutor->id,
@@ -90,9 +84,6 @@ class JustificationController extends Controller
             'active' => true, // Puedes personalizar esto según tus necesidades
             'approved' => null, // Puedes establecer esto como nulo por defecto
         ]);
-
-        // Guardar la justificación en la base de datos
-        $justification->save();
 
         return Response::json(['success' => true], 200);
     }
@@ -200,12 +191,13 @@ class JustificationController extends Controller
     public function editJustificationById($id, Request $request): JsonResponse
     {
         // Validación de datos del request
-        $valitador = Validator::make([$request->all()], [
+        $validator = Validator::make([$request->all()], [
             'approve' => 'required|boolean',
             'observation' => 'required|string'
         ]);
 
         Log::channel('daily')->debug('intentando aprobar justiciante');
+        
         // Obtener la justificación por ID
         $justification = Justification::find($id);
 

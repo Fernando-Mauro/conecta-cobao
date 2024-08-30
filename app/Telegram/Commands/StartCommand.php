@@ -2,7 +2,6 @@
 
 namespace App\Telegram\Commands;
 
-use Illuminate\Support\Facades\Log;
 use Telegram\Bot\Commands\Command;
 use Telegram\Bot\Keyboard\Keyboard;
 
@@ -14,17 +13,15 @@ class StartCommand extends Command
 
     public function handle()
     {
-        $keyboard = Keyboard::make()
-            ->inline()
-            ->row(
-                [
-                    Keyboard::inlineButton(['text' => 'Registrar número', 'callback_data' => 'registrar']),
-                    Keyboard::inlineButton(['text' => 'Borrar número', 'callback_data' => 'borrar'])
-                ]
-            );
+        $keyboard = Keyboard::make()->row([
+            Keyboard::button(['text' => '/padre  👨']),
+            Keyboard::button(['text' => '/madre  👩']),
+        ])->row([
+            Keyboard::button(['text' => '/docente  🧑‍🏫']),
+        ])->setOneTimeKeyboard(true);
 
         $this->replyWithMessage([
-            'text' => 'Hola! Bienvenido al chat del cobao, ¿Qué desea hacer?',
+            'text' => 'Hola! Bienvenido al chat de conecta-t, ¿Eres padre/madre de familia o docente?',
             'reply_markup' => $keyboard
         ]);
     }

@@ -5,12 +5,13 @@ namespace App\Http\Controllers\v1\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\Campus;
-use App\Models\Groups;
+use App\Models\Group;
 use App\Models\Student;
 use App\Models\StudentCheckIn;
 use App\Models\Teacher;
 use App\Models\Tutor;
 use App\Models\TutorStudent;
+use App\Models\User;
 use App\Traits\StudentTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Response;
@@ -25,31 +26,38 @@ class StudentController extends Controller
 
     public function getStudentById($id): JsonResponse
     {
-        $student = Student::where('id', $id)->select('curp', 'name', 'phone', 'enrollment', 'id', 'group_id')->first();
+        $student = Student::where('id', $id)->select('curp', 'phone', 'enrollment', 'id', 'group_id', 'user_id')->first();
+
         if (!$student) {
             return Response::json(['message' => 'Estudiante no encontrado'], 404);
         }
 
-        $group = Groups::where('id', $student->group_id)->first();
+        $group = Group::where('id', $student->group_id)->first();
         if (!$group) {
             return Response::json(['message' => 'Grupo no encontrado'], 404);
         }
 
         $user = Auth::user();
         $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
+
         if (!$tutorStudent) {
             return Response::json(['message' => 'Tutor no encontrado'], 404);
         }
 
         $tutor = Tutor::where('id', $tutorStudent->tutor_id)->first();
+
         if (!$tutor) {
             return Response::json(['message' => 'Tutor no encontrado'], 404);
         }
 
+        $userTutor = User::where('id', $tutor->user_id)->first();
+        $userStudent = User::where('id', $student->user_id)->first();
+
         if ($user->hasRole('admin') || $user->hasRole('teacher')) {
-            $tutorData = ['tutor_name' => $tutor->name, 'tutor_phone' => $tutor->phone];
+            $tutorData = ['tutor_name' => $userTutor->name, 'tutor_phone' => $tutor->phone];
             $groupData = ['group' => $group->name];
-            return Response::json(array_merge($student->toArray(), $tutorData, $groupData), 200);
+            $studentName = ['name' => $userStudent->name];
+            return Response::json(array_merge($student->toArray(), $tutorData, $groupData, $studentName), 200);
         }
 
         $activeTutor = $tutorStudent->activeTutor()->first();
@@ -103,22 +111,34 @@ class StudentController extends Controller
     public function getAllStudentsByCampus()
     {
         $user = Auth::user();
+
         if (!$user) {
             return Response::json(['message' => 'Invalid credentials'], 401);
         }
+
         $admin = Admin::where('user_id', $user->id)->first();
+
         $campus = Campus::where('id', $admin->campus_id)->first();
+
         if (!$campus) {
             return Response::json(['message' => 'Campus no encontrado'], 404);
         }
-        $students = Student::where('campus_id', $admin->campus_id)->select('name', 'group_id', 'enrollment', 'id')->get();
-        foreach ($students as $student) {
-            $group = Groups::where('id', $student->group_id)->first();
-            if ($group) {
-                $student->group = $group->name;
-            }
-            $student->campus = $campus->campus_number;
-        }
+
+        $students = Student::where('campus_id', $admin->campus_id)
+            ->with(['user:id,name', 'group:id,name']) // Cargar las relaciones 'user' y 'group'
+            ->select('user_id', 'group_id', 'enrollment', 'id')
+            ->get();
+
+
+        $students->transform(function ($student) use ($campus) {
+            return [
+                'id' => $student->id,
+                'name' => $student->user->name,
+                'enrollment' => $student->enrollment,
+                'group' => $student->group->name,
+                'campus' => $campus->campus_number,
+            ];
+        });
         return Response::json($students, 200);
     }
 
@@ -136,18 +156,34 @@ class StudentController extends Controller
         $teacher = Teacher::where('user_id', $userId)->first();
 
         if ($admin) {
-            $group = Groups::where('id', $groupId)->where('campus_id', $admin->campus_id)->first();
+            $group = Group::where('id', $groupId)->where('campus_id', $admin->campus_id)->first();
         } elseif ($teacher) {
-            $group = Groups::where('id', $groupId)->where('campus_id', $teacher->campus_id)->first();
+            $group = Group::where('id', $groupId)->where('campus_id', $teacher->campus_id)->first();
         } else {
             return Response::json(['message' => 'El usuario no es ni administrador ni profesor'], 403);
         }
 
         if ($group) {
+            // Obtiene los estudiantes del grupo
             $students = Student::where('group_id', $group->id)
-                ->selectRaw('id, name as nombre, curp, enrollment as matricula, phone as telefono')
+                ->selectRaw('id, curp, enrollment as matricula, phone as telefono, user_id')
                 ->get();
-            return Response::json($students, 200);
+            // Obtener a los usuarios de cada estudiante para tener el nombre, unirlos con los estudiantes y regresar todo
+
+            $response = [];
+            foreach ($students as $student) {
+                // push the student to the response
+
+                $response[] = [
+                    'id' => $student->id,
+                    'nombre' => User::where('id', $student->user_id)->first()->name,
+                    'matricula' => $student->matricula,
+                    'telefono' => $student->telefono,
+                    'curp' => $student->curp
+                ];
+            }
+
+            return Response::json($response, 200);
         } else {
             return Response::json(['message' => 'No se encontró el grupo'], 404);
         }

@@ -9,6 +9,8 @@ use App\Models\StudentCheckIn;
 use App\Models\StudentCheckOut;
 use App\Models\Tutor;
 use App\Models\TutorStudent;
+use App\Models\User;
+use App\Traits\StudentTrait;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -19,14 +21,7 @@ use GuzzleHttp\Client;
 
 class StudentCheckController extends Controller
 {
-    public function isValidEnrollment($enrollment)
-    {
-        // Validación: Verificar si la matrícula coincide con la expresión regular
-        if (!preg_match('/^(?:[0-9]{2}[abAB][0-9]{7,8}|[sS][aA][0-9]{7})$/', $enrollment)) {
-            return false;
-        }
-        return true;
-    }
+    use StudentTrait;
 
     public function determineCheckType($student_id)
     {
@@ -42,21 +37,22 @@ class StudentCheckController extends Controller
     }
 
 
-    public function registerStudentCheckByEnrollment(Request $request, $enrollment)
+    public function registerStudentCheck(Request $request, $identifier)
     {
-        
-        try {
-            if (!$this->isValidEnrollment($enrollment)) {
-                return Response::json(["message" => "Matrícula inválida 🤔"], 404);
+        try {    
+
+            if ($this->isValidEnrollment($identifier)) {
+                $student = Student::where('enrollment', $identifier)->first();
+            } elseif ($this->isValidCurp($identifier)) {
+                $student = Student::where('curp', $identifier)->first();
             }
-            
-            $student = Student::where('enrollment', $enrollment)->first();
-            
+    
             if (!$student) {
                 return Response::json(['message' => 'Estudiante no encontrado'], 404);
             }
-            
+    
             $type = $this->determineCheckType($student->id);
+            
             if ($type === 'in') {
                 $this->registerIn($student);
                 return Response::json(["message" => "Registro y mensaje enviado correctamente"], 200);
@@ -70,6 +66,7 @@ class StudentCheckController extends Controller
             return Response::json(['message' => 'Ha ocurrido un error ' . $err], 500);
         }
     }
+    
 
 
     public function registerIn($student)
@@ -93,19 +90,12 @@ class StudentCheckController extends Controller
     public function notifyTutor($student, $message)
     {
         $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
+        
         if ($tutorStudent) {
             $tutor = Tutor::find($tutorStudent->tutor_id);
             if ($tutor) {
                 $time = date('H:i');
                 $telegram_chat_id = $tutor->telegram_chat_id;
-                $client = new Client();
-                $phone = $tutor->phone;
-                // $res = $client->request('POST', getenv('URL_BOT_WHATSAPP'). 'envio/', [
-                //     'json' => [
-                //         'numero' => '521'.$phone,
-                //         'mensaje' => 'Se ha registrado una ' . $message . ' de ' . $student->name . ' a las ' . $time . ' horas'
-                //     ]
-                // ]);
                 if ($telegram_chat_id) {
                     SendMessage::dispatch($student, $message, $time)->onQueue('messages');
                 }

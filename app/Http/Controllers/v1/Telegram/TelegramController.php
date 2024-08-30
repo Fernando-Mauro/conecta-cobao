@@ -6,87 +6,98 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\ConversationStatus;
 use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\Tutor;
 use App\Models\TutorStudent;
 use App\Models\User;
+use App\Traits\StudentTrait;
+use App\Traits\TeacherTrait;
 use Illuminate\Support\Facades\Log;
 use Telegram\Bot\Laravel\Facades\Telegram;
 use JWTAuth;
 
 class TelegramController extends Controller
 {
-    public function isValidEnrollment($enrollment)
-    {
-        // Validación: Verificar si la matrícula coincide con la expresión regular
-        if (!preg_match('/^(?:[0-9]{2}[abAB][0-9]{7,8}|[sS][aA][0-9]{7})$/', $enrollment)) {
-            return false;
-        }
-        return true;
-    }
+
+    use StudentTrait;
+    use TeacherTrait;
 
     public function inbound(Request $request)
     {
-        $update = Telegram::commandsHandler(true);
+        $update = Telegram::getWebhookUpdates();
+        $chatId = $update->getMessage()->getChat()->getId();
 
-        if ($update->isType('my_chat_member')) {
-            Log::channel('daily')->debug('Mensaje raro');
+        // Busca el estado actual en la base de datos
+        $conversation = ConversationStatus::where('chat_id', $chatId)->first();
+
+        if (!$conversation || $update->hasCommand()) {
+            Telegram::commandsHandler(true);
+            return 'ok';
         } else {
-            if ($update->isType('callback_query')) {
-                $callbackData = $update->getCallbackQuery()->getData();
-
-                if ($callbackData === 'registrar') {
-                    $this->setRegisterState($update);
-                } else if ($callbackData === 'borrar') {
-                    $this->setDeleteState($update);
-                }
-            } else {
-                Log::channel('daily')->debug('Mensaje normal');
-                $chatId = $update->getMessage()->getChat()->getId();
-
-                // Busca el estado actual en la base de datos
-                $conversation = ConversationStatus::where('chat_id', $chatId)->first();
-
-                if ($conversation) {
-                    $currentState = $conversation->conversation_state;
-                    switch ($currentState) {
-                        case 'registro':
-                            $enrollment = $update->getMessage()->getText();
-                            $this->setEnrollmentToConversationStatus($enrollment, $chatId);
-                            break;
-                        case 'password':
-                            $password = $update->getMessage()->getText();
-                            $this->handleRegistration($chatId, $password);
-                            break;
-                        case 'borrar':
-                            $enrollment = $update->getMessage()->getText();
-                            $this->handleDeletion($enrollment, $chatId);
-                            break;
-                        default:
-                            Telegram::sendMessage([
-                                'chat_id' => $chatId,
-                                'text' => 'Lo siento, prueba con otra palabra o comando'
-                            ]);
-                    }
-                }
-            }
+            $currentState = $conversation->conversation_state;
+            $type_user = $conversation->type_user;
+            $this->handleConversationStatus($update, $currentState, $type_user);
         }
 
         return 'ok';
     }
 
+    private function handleConversationStatus($update, $currentState, $type_user)
+    {
+        $chatId = $update->getMessage()->getChat()->getId();
+
+        switch ($currentState) {
+            case 'registro':
+                $identifier = $update->getMessage()->getText();
+                $this->setIdentifierToConversationStatus($identifier, $chatId, $type_user);
+                break;
+            case 'password':
+                $password = $update->getMessage()->getText();
+                $this->handleRegistration($chatId, $password, $type_user);
+                break;
+            case 'borrar':
+                $identifier = $update->getMessage()->getText();
+                $this->handleDeletion($identifier, $chatId);
+                break;
+        }
+    }
+    public function setIdentifierToConversationStatus($identifier, $chatId, $type_user)
+    {
+        if ($type_user == 'teacher' && !$this->isValidEmail($identifier)) {
+            $message = 'El correo electrónico proporcionado no es válido 😅' . "\n" . 'Ingresa de nuevo el correo electrónico.';
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => $message
+            ]);
+            return;
+        }
+
+        if ($type_user == 'tutor' && !$this->isValidEnrollment($identifier)) {
+            $message = 'La matrícula proporcionada no es válida 😅' . "\n" . 'Ingresa de nuevo la matrícula.';
+
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => $message
+            ]);
+
+            return;
+        }
+
+        $conversation = $this->getConversationStatus($chatId);
+        $conversation->identifier = $identifier;
+        $conversation->save();
+
+        $this->setConversationStatus($chatId, 'password');
+        $message = 'Estamos a punto de terminar! Por favor escriba su contraseña';
+
+        Telegram::sendMessage([
+            'chat_id' => $chatId,
+            'text' => $message
+        ]);
+    }
     public function getConversationStatus($chatId)
     {
         $conversation = ConversationStatus::where('chat_id', $chatId)->first();
-
-        if (!$conversation) {
-            // Si no se encuentra un registro, crea uno con un estado inicial (por ejemplo, "none")
-            $conversation = new ConversationStatus();
-            $conversation->chat_id = $chatId;
-            $conversation->conversation_state = null;
-            $conversation->enrollment = null;
-            $conversation->save();
-        }
-
         return $conversation;
     }
 
@@ -97,135 +108,179 @@ class TelegramController extends Controller
         $conversation->save();
     }
 
-    public function setRegisterState($update)
+    public function handleRegistration($chatId, $password, $type_user)
     {
-        $chatId = $update->getMessage()->getChat()->getId();
-        $this->setConversationStatus($chatId, 'registro');
-
-        Telegram::sendMessage([
-            'chat_id' => $chatId,
-            'text' => 'Por favor escribe la matrícula del estudiante',
-        ]);
-    }
-
-    public function setDeleteState($update)
-    {
-        $chatId = $update->getMessage()->getChat()->getId();
-        $this->setConversationStatus($chatId, 'borrar');
-
-        Telegram::sendMessage([
-            'chat_id' => $update->getMessage()->getChat()->getId(),
-            'text' => 'Por favor escribe la matrícula del estudiante',
-        ]);
-    }
-
-    public function handleRegistration($chatId, $password)
-    {
-        Log::channel('daily')->info('Inicio del registro');
-
         $conversation = $this->getConversationStatus($chatId);
-        Log::channel('daily')->info('Estado de la conversación obtenido: ' . json_encode($conversation));
 
-        $student = Student::where('enrollment', $conversation->enrollment)->first();
-        Log::channel('daily')->info('Estudiante obtenido: ' . json_encode($student));
+        if ($type_user == 'teacher')
+            $this->handleTeacherRegistration($conversation, $chatId, $password);
 
-        if ($student) {
-            $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
-            Log::channel('daily')->info('Tutor del estudiante obtenido: ' . json_encode($tutorStudent));
-
-            if ($tutorStudent) {
-                $tutor = Tutor::where('id', $tutorStudent->tutor_id)->first();
-                Log::channel('daily')->info('Tutor obtenido: ' . json_encode($tutor));
-
-                if ($tutor) {
-                    $userTutor = User::where('id', $tutor->user_id)->first();
-                    Log::channel('daily')->info('Usuario del tutor obtenido: ' . json_encode($userTutor));
-
-                    if (JWTAuth::attempt(['email' => $userTutor->email, 'password' => $password]) && $tutor->telegram_chat_id == null) {
-                        $tutor->telegram_chat_id = $chatId;
-                        $tutor->save();
-                        $message = 'Número telefónico asignado correctamente.' . "\n" . 'A partir de este momento recibirás notificaciones sobre la entrada y salida del estudiante.';
-                        $this->setConversationStatus($chatId, null);
-                        Log::channel('daily')->info('Autenticación exitosa y chatId asignado al tutor');
-                    } else {
-                        $message = 'El codigo de seguridad es incorrecto o ya hay otro número registrado, por favor intenta de nuevo';
-                        Log::channel('daily')->info('Falló la autenticación');
-                    }
-                } else {
-                    $message = 'No se pudo encontrar un tutor activo para este estudiante.';
-                    Log::channel('daily')->info('No se encontró un tutor activo');
-                }
-            } else {
-                $message = 'No se pudo encontrar una relación de tutor para este estudiante.';
-                Log::channel('daily')->info('No se encontró una relación de tutor');
-            }
-        } else {
-            $message = 'No se encontró ningún estudiante con la matrícula proporcionada.';
-            Log::channel('daily')->info('No se encontró un estudiante');
-        }
-
-        Telegram::sendMessage([
-            'chat_id' => $chatId,
-            'text' => $message
-        ]);
-
-        Log::channel('daily')->info('Mensaje enviado: ' . $message);
+        if ($type_user == 'tutor')
+            $this->handleTutorRegistration($conversation, $chatId, $password);
     }
 
-
-    public function setEnrollmentToConversationStatus($enrollment, $chatId)
+    private function handleTutorRegistration($conversation, $chatId, $password)
     {
-        if ($this->isValidEnrollment($enrollment)) {
-            $conversation = $this->getConversationStatus($chatId);
-            $conversation->enrollment = $enrollment;
-            $conversation->save();
-            $this->setConversationStatus($chatId, 'password');
-            $message = 'Estamos a punto de terminar! Por favor escriba su código de seguridad';
-        } else {
-            $message = 'La matrícula proporcionada no es válida 😠' . "\n" . 'Ingresa de nuevo la matrícula.';
+        // TODO: Revisar si al finalizar el registro hay que borrar el conversation status
+
+        $student = Student::where('enrollment', $conversation->identifier)->first();
+        if (!$student) {
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No se encontró ningún estudiante con la matrícula proporcionada.'
+            ]);
+            return;
+        }
+
+        $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
+        if (!$tutorStudent) {
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No se encontró una relación de tutor para este estudiante.'
+            ]);
+            return;
+        }
+
+        $tutor = Tutor::where('id', $tutorStudent->tutor_id)->first();
+        if (!$tutor) {
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No se encontró un tutor activo para este estudiante.'
+            ]);
+            return;
+        }
+
+        $userTutor = User::where('id', $tutor->user_id)->first();
+        if (JWTAuth::attempt(['email' => $userTutor->email, 'password' => $password]) && $tutor->telegram_chat_id == null) {
+            $tutor->telegram_chat_id = $chatId;
+            $tutor->save();
+            $message = 'Número telefónico asignado correctamente.' . "\n" . 'A partir de este momento recibirás notificaciones sobre la entrada y salida del estudiante.';
+
+
+            $this->setConversationStatus($chatId, null);
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => $message
+            ]);
+            return;
         }
 
         Telegram::sendMessage([
             'chat_id' => $chatId,
-            'text' => $message
+            'text' => 'El codigo de seguridad es incorrecto o ya hay otro número registrado, por favor intenta de nuevo'
         ]);
+        return;
     }
-    public function handleDeletion($enrollment, $chatId)
+
+    private function handleTeacherRegistration($conversation, $chatId, $password)
     {
-        // Busca al estudiante por la matrícula proporcionada
-        $student = Student::where('enrollment', $enrollment)->first();
-        if ($this->isValidEnrollment($enrollment)) {
-            if ($student) {
-                // Encuentra la relación del tutor con el estudiante
-                $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
-
-                if ($tutorStudent) {
-                    // Encuentra al tutor correspondiente
-                    $tutor = Tutor::find($tutorStudent->tutor_id);
-
-                    if ($tutor) {
-                        // Establece telegram_chat_id en null
-                        $tutor->telegram_chat_id = null;
-                        $tutor->save();
-                        $message = 'Se ha eliminado la asociación del tutor con el estudiante. Ya no recibirás notificaciones.';
-                        $this->setConversationStatus($chatId, null);
-                    } else {
-                        $message = 'No se pudo encontrar al tutor asociado a este estudiante.';
-                    }
-                } else {
-                    $message = 'No se encontró una relación de tutor para este estudiante.';
-                }
-            } else {
-                $message = 'No se encontró ningún estudiante con la matrícula proporcionada.';
-            }
-        } else {
-            $message = 'La matrícula proporcionada no es válida 😠' . "\n" . 'Ingresa de nuevo la matrícula.';
+        $user = User::where('email', $conversation->identifier)->first();
+        
+        if (!$user) {
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No se encontró ningún usuario con el correo proporcionado.'
+            ]);
+            return;
         }
 
+        // check if the role of the user is teacher 
+        if(!$user->getRoleNames()->contains('teacher')){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No se tiene autorización de docente con el correo proporcionado.'
+            ]);
+            return;
+        }
+        
+        $teacher = Teacher::where('user_id', $user->id)->first();
+
+        $userTeacher = User::where('id', $teacher->user_id)->first();
+        
+        if (JWTAuth::attempt(['email' => $userTeacher->email, 'password' => $password]) && $teacher->telegram_chat_id == null) {
+            $teacher->telegram_chat_id = $chatId;
+            $teacher->save();
+            $message = 'Número telefónico asignado correctamente.' . "\n" . 'A partir de este momento recibirás notificaciones sobre estudiantes con permisos.';
+
+            $this->setConversationStatus($chatId, null);
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => $message
+            ]);
+            return;
+        }
+
+        if($teacher->telegram_chat_id != null){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'Ya hay un número registrado con este correo electrónico.'
+            ]);
+            return;
+        }
+
+        Telegram::sendMessage([
+            'chat_id' => $chatId,
+            'text' => 'El codigo de seguridad es incorrecto, por favor intenta de nuevo'
+        ]);
+
+    }
+    public function handleDeletion($identifier, $chatId)
+    {   
+        // TODO: Implementar borrar el número para el maestro
+        if(!$this->isValidEnrollment($identifier)){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'La matrícula proporcionada no es válida ' . "\n" . 'Ingresa de nuevo la matrícula.'
+            ]);
+            return;
+        }
+
+        $student = Student::where('enrollment', $identifier)->first();
+        
+        if(!$student){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No se encontró ningún estudiante con la matrícula proporcionada.'
+            ]);
+            return;
+        }
+        $tutorStudent = TutorStudent::where('student_id', $student->id)->first();
+        
+        if(!$tutorStudent){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No se encontró una relación de tutor para este estudiante.'
+            ]);
+            return;
+        }
+        $tutor = Tutor::find($tutorStudent->tutor_id);
+
+        if(!$tutor){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No se encontró un tutor asociado a este estudiante.'
+            ]);
+            return;
+        }
+        
+        if($tutor->telegram_chat_id != $chatId){
+            Telegram::sendMessage([
+                'chat_id' => $chatId,
+                'text' => 'No tienes permisos para eliminar la asociación del tutor con el estudiante.'
+            ]);
+            return;
+        }
+
+        $tutor->telegram_chat_id = null;
+        $tutor->save();
+        $message = 'Se ha eliminado la asociación del tutor con el estudiante. Ya no recibirás notificaciones.';
+        $this->setConversationStatus($chatId, null);
 
         Telegram::sendMessage([
             'chat_id' => $chatId,
             'text' => $message
         ]);
+
+        return;
     }
 }

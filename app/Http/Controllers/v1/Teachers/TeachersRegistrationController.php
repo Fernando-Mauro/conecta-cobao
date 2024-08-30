@@ -26,7 +26,6 @@ class TeachersRegistrationController extends Controller
         $user->assignRole($role);
 
         Teacher::create([
-            'name' => $user->name,
             'phone' => $phone,
             'campus_id' => Campus::where('campus_number', $campusNumber)->first()->id,
             'user_id' => $user->id

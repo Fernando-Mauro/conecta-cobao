@@ -24,6 +24,11 @@ class Student extends Model
 
     public $timestamps = true;
 
+    // The student have  one user 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
     public function checkIns(): HasMany
     {
         return $this->hasMany(StudentCheckIn::class, 'student_id', 'id');
@@ -43,4 +48,13 @@ class Student extends Model
         return $this->hasMany(Report::class, 'student_id', 'id');
     }
     
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class, 'group_id', 'id');
+    }
+
+    public function campus(): BelongsTo
+    {
+        return $this->belongsTo(Campus::class, 'campus_id', 'id');
+    }
 }

@@ -14,17 +14,15 @@ return new class extends Migration
         Schema::create('groups', function (Blueprint $table) {
             $table->id();
             
-            // If is like secondary, the name is: 1
+            // If is like secondary, the name is: 'A' if is like high school, the name is: 303
             $table->integer('name');
-            
-            // The key is: 'A', can be nullable like in high school, only the name is 303
-            $table->string('key')->nullable();
-            
             $table->unsignedBigInteger('campus_id');
             $table->foreign('campus_id')->references('id')->on('campus');
 
+            $table->unsignedBigInteger('level_id');
+            $table->foreign('level_id')->references('id')->on('levels');
+
             $table->boolean('active')->default(true);
-        
             $table->timestamps();
         });
     }

@@ -64,6 +64,7 @@ class AuthController extends Controller
             Log::debug($e->getMessage());
             return response()->json(['error' => 'No se puede crear el token'], 500);
         }
+        
         $user = Auth::user();
         $role = $user->roles;
 
