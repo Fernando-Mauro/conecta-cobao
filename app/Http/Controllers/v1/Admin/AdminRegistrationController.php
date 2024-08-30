@@ -51,7 +51,6 @@ class AdminRegistrationController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'phone' => 'required|string',
-            'campus' => 'required|integer',
             'email' => 'required|string|email',
             'password' => 'required|string|min:6'
         ]);

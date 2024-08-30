@@ -38,21 +38,24 @@ class AdminController extends Controller
     }
     public function getAllAdmins()
     {
-        $admins = Admin::where('active', true)
-            ->with('campus:id,campus_number,name')  // Carga la relación 'campus'
-            ->select('id', 'name', 'email', 'campus_id')
-            ->get()
-            ->map(function ($admin) {  // Transforma cada admin
-                return [
-                    'id' => $admin->id,
-                    'nombre' => $admin->name,
-                    'correo' => $admin->email,
-                    'nombre de plantel' => $admin->campus->name,
-                    'número de plantel' => $admin->campus->campus_number,
-                ];
-            });
+        $userId = Auth::id();
+        $campus_id = Admin::where('user_id', $userId)->first()->campus_id;
+        
+        $admins = Admin::where('campus_id', $campus_id)->get();
+        $response = [];
 
-        return Response::json($admins, 200);
+        foreach($admins as $admin){
+            $user = User::where('id', $admin->user_id)->first();
+         
+            $response[] = [
+                'id' => $admin->id,
+                'nombre' => $user->name,
+                'telefono' => $admin->phone,
+                'email' => $user->email
+            ];
+        }
+
+        return Response::json($response, 200);
     }
     
     public function sendMassiveMessages(Request $request){
@@ -81,10 +84,13 @@ class AdminController extends Controller
 
     public function getAdminById($id)
     {
-        $admin = Admin::where('id', $id)->first();
+        $admin = Admin::where('id', $id)->with('user')->first();
+        
         if (!$admin) {
             return Response::json(['message' => 'Administrador no encontrado'], 200);
         }
+
+    
         return Response::json($admin, 200);
     }
 
