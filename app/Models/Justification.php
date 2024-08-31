@@ -13,13 +13,11 @@ class Justification extends Model
 
     protected $fillable = [
         'student_id',
-        'tutor_email',
-        'document_url',
         'tutor_id',
         'start_date',
         'end_date',
-        'is_active',
-        'is_approved',
+        'active',
+        'approved',
         'files_names'
     ];
 

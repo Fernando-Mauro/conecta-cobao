@@ -52,4 +52,9 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+    public function admin(): HasOne
+    {
+        return $this->hasOne(Admin::class);
+    }
+
 }

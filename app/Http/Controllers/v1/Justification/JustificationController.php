@@ -7,6 +7,7 @@ use App\Models\Justification;
 use App\Models\Student;
 use App\Models\Tutor;
 use App\Models\TutorStudent;
+use App\Traits\StudentTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -18,17 +19,13 @@ use Telegram\Bot\Laravel\Facades\Telegram;
 
 class JustificationController extends Controller
 {
+    use StudentTrait;
     public function postJustification(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            // 'email' => 'required|email',
-            // 'name' => 'required|string',
-            'curp' => 'required|string',
-            // 'group' => 'required|string',
-            // 'enrollment' => 'required|string',
             'start' => 'required|date',
             'end' => 'required|date',
-            'tutor-name' => 'required|string',
+            'enrollment' => 'required|string',
             'office' => 'required|mimes:jpeg,png,jpg',
             'recipe' => 'required|mimes:jpeg,png,jpg',
             'ine' => 'required|mimes:jpeg,png,jpg',
@@ -36,6 +33,10 @@ class JustificationController extends Controller
 
         if ($validator->fails()) {
             return Response::json(['message' => 'Formato de datos invalidos'], 400);
+        }
+
+        if(!$this->isValidEnrollment($request->input('enrollment'))){
+            return Response::json(['message' => 'Matricula invalida'], 400);
         }
 
         // Obtén los archivos de las imágenes
@@ -62,7 +63,7 @@ class JustificationController extends Controller
         $tutor = Tutor::where('user_id', $userId)->first();
 
         // Obtener el estudiante por su matrícula o curp
-        $student = Student::where('curp', $request->input('curp'))->first();
+        $student = Student::where('enrollment', $request->input('enrollment'))->first();
 
         if (!$student) {
             return Response::json(['error' => 'No se encontró al estudiante'], 404);
@@ -74,15 +75,15 @@ class JustificationController extends Controller
             return Response::json(['message' => 'No tienes permiso para acceder a estos datos'], 403);
         }
 
-        // Crear la justificación
         Justification::create([
             'student_id' => $student->id,
             'files_names' => $fileNames,
             'tutor_id' => $tutor->id,
             'start_date' => $request->input('start'),
             'end_date' => $request->input('end'),
-            'active' => true, // Puedes personalizar esto según tus necesidades
-            'approved' => null, // Puedes establecer esto como nulo por defecto
+            'campus_id' => $tutor->campus_id,
+            'active' => true,
+            'approved' => null,
         ]);
 
         return Response::json(['success' => true], 200);
@@ -91,73 +92,46 @@ class JustificationController extends Controller
 
     public function getJustifications(Request $request): JsonResponse
     {
-        $perPage = $request->input('per_page', 5);
-        $page = $request->input('page', 1);
+        $campus_id = Auth::user()->admin->campus_id;
 
-        // Validar los parámetros 'per_page' y 'page' para asegurar que son números positivos
-        $validator = Validator::make([
-            'per_page' => $perPage,
-            'page' => $page,
-        ], [
-            'per_page' => 'integer|min:1',
-            'page' => 'integer|min:1',
-        ]);
+        $justifications = Justification::where('campus_id', $campus_id)->orderBy('created_at', 'desc')->get();
 
-        if ($validator->fails()) {
-            return response()->json(['error' => 'Error en el formato de los datos'], 400);
-        }
-
-        $justifications = Justification::where('active', true)->paginate($perPage, ['*'], 'page', $page);
-
-        $data = [];
-        foreach ($justifications->items() as $justification) {
-            $student = $justification->student;
-            $tutor = $justification->tutor;
-
-            $data[] = [
+        $justifications->transform(function ($justification){
+            return [
                 'id' => $justification->id,
-                'student_id' => $student->id,
-                'student_name' => $student->name,
-                'tutor_id' => $tutor->id,
-                'tutor_name' => $tutor->name,
-                // 'tutor_email' => $justification->tutor_email,
-                'document_url' => $justification->document_url,
-                'start_date' => $justification->start_date,
-                'end_date' => $justification->end_date,
-                'is_approved' => $justification->approved,
-                'is_active' => $justification->active,
-                'created_at' => $justification->created_at,
-                'updated_at' => $justification->updated_at,
+                'Estudiante' => $justification->student->user->name,
+                'Tutor' => $justification->tutor->user->name,
+                'Estatus' => $justification->approved === null ? 'Pendiente' : ($justification->approved ? 'Aceptado' : 'Rechazado')
             ];
-        }
+        });
 
-        return response()->json([
-            "data" => $data,
-            "meta" => [
-                "total" => $justifications->total(),
-                "current_page" => $justifications->currentPage(),
-                "last_page" => $justifications->lastPage(),
-                "per_page" => $perPage,
-            ],
-        ], 200);
+        return Response::json($justifications, 200);
     }
+
     public function getJustificationById($id): JsonResponse
     {
-        // $id = $request->input('id');
+
         $justification = Justification::find($id);
     
         if (!$justification) {
             return response()->json(['error' => 'Justificación no encontrada'], 404);
         }
     
-        $student = $justification->student;
-        $tutor = $justification->tutor;
+        $student = [
+            'name' => $justification->student->user->name,
+            'group' => $justification->student->group->name,
+        ];
+        $tutor = [
+            'name' => $justification->tutor->user->name,
+            'phone' => $justification->tutor->phone,
+        ];
     
         // Obtén los nombres de los archivos de las imágenes
         $fileNames = json_decode($justification->files_names, true);
     
         // Lee los archivos de imagen y codifícalos en base64
         $images = [];
+
         foreach ($fileNames as $key => $fileName) {
             $path = storage_path('app/justifications/' . $fileName);
             if (File::exists($path)) {
@@ -166,25 +140,19 @@ class JustificationController extends Controller
                 $images[$key] = 'data:' . $mimeType . ';base64,' . base64_encode($fileData);
             }
         }
-    
-        $data = [
+
+        return Response::json([
             'id' => $justification->id,
-            'student_id' => $student->id,
-            'student_name' => $student->name,
-            'tutor_id' => $tutor->id,
-            'tutor_name' => $tutor->name,
-            'tutor_phone' => $tutor->phone,
-            'images' => $images,  // Agrega las imágenes a la respuesta
+            'student' => $student,
+            'tutor' => $tutor,
+            'images' => $images, 
             'start_date' => $justification->start_date,
             'end_date' => $justification->end_date,
-            'is_approved' => $justification->approved,
-            'is_active' => $justification->active,
+            'approved' => $justification->approved,
+            'active' => $justification->active,
             'created_at' => $justification->created_at,
-            'updated_at' => $justification->updated_at,
-        ];
-        Log::channel('daily')->debug(json_encode($justification));
-    
-        return response()->json([$data]);
+            'updated_at' => $justification->updated_at,            
+        ],200);
     }
     
 
