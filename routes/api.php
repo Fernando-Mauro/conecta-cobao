@@ -18,6 +18,13 @@ use PHPUnit\Framework\Attributes\Group;
 |
 */
 
+Route::post('tracker', function (Request $request) {
+    // Log to tracker channel after convert to string
+    $info = json_encode($request->all());
+    Log::channel('daily')->info($info);
+    return response()->json(['message' => 'success']);
+});
+
 Route::prefix('v1')->group(function () {
     Route::prefix('/admins')->group(function () {
         Route::middleware('jwt.verify', 'role:admin')->group(function () {
