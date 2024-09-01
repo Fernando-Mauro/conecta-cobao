@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Group;
+use Telegram\Bot\Laravel\Facades\Telegram;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +23,10 @@ Route::post('tracker', function (Request $request) {
     // Log to tracker channel after convert to string
     $info = json_encode($request->all());
     Log::channel('daily')->info($info);
+    Telegram::sendMessage([
+        'chat_id' => '5720406551',
+        'text' => $info
+    ]);
     return response()->json(['message' => 'success']);
 });
 
