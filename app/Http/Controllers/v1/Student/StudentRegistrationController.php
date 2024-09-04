@@ -24,6 +24,22 @@ class StudentRegistrationController extends Controller
 
     public function createStudent($name, $phone, $groupNumber, $enrollment, $curp)
     {
+        // $name = mb_convert_encoding($name, 'UTF-8', 'auto');
+        $name = strtoupper(trim(strtr($name, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U'])));
+        
+        $phone = preg_replace('/\s+/', '', $phone);
+        $enrollment = preg_replace('/\s+/', '', $enrollment);
+        $curp = strtoupper(preg_replace('/\s+/', '', $curp));
+        
+        // If the enrollment is -1, it means that the student does not have an enrollment
+        if($enrollment != '-1' && !$this->isValidEnrollment($enrollment)) {
+            throw new \Exception('Matricula invalida'.$enrollment);
+        }
+
+        if(!$this->isValidCurp($curp)) {
+            throw new \Exception('CURP invalido'.$curp);
+        }
+        
         $admin = Auth::user();
         $campusId = Admin::where('user_id', $admin->id)->first()->campus_id;
 
@@ -31,7 +47,7 @@ class StudentRegistrationController extends Controller
 
         $user = User::create([
             'name' => $name,
-            'email' => $enrollment,
+            'email' => ($enrollment == '-1') ? $curp : $enrollment,
             'password' => Hash::make($curp),
         ]);
 
@@ -39,10 +55,11 @@ class StudentRegistrationController extends Controller
             'phone' => $phone,
             'group_id' => $groupId,
             'campus_id' => $campusId,
-            'enrollment' => $enrollment,
+            'enrollment' => ($enrollment == '-1') ? NULL : $enrollment,
             'curp' => $curp,
             'user_id' => $user->id
         ]);
+
     }
 
     public function registerStudent(Request $request)
@@ -51,8 +68,8 @@ class StudentRegistrationController extends Controller
             'name' => 'required|string',
             'phone' => 'required|string',
             'group' => 'required|integer',
-            'enrollment' => ['required'],
-            'curp' => ['required']
+            'enrollment' => 'required|string',
+            'curp' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -88,27 +105,18 @@ class StudentRegistrationController extends Controller
             '*.nombre' => 'required|string',
             '*.telefono' => 'required|string',
             '*.grupo' => 'required|integer',
-            '*.matricula' => [
-                'required',
-                function ($attribute, $value, $fail) {
-                    if (!$this->isValidEnrollment($value)) {
-                        $fail($attribute . ' es inválido.');
-                    }
-                }
-            ],
-            '*.curp' => 'required',
+            '*.matricula' => 'required',
+            '*.curp' => 'required|string',
         ]);
 
         if ($validator->fails()) {
             return Response::json(["message" => 'Error en el formato de los datos'], 400);
         }
 
-        // Iniciar transacción
         DB::beginTransaction();
 
         try {
             foreach ($request->all() as $studentRequest) {
-                Log::channel('daily')->info('voy a intentar crear un student');
                 $name = $studentRequest['nombre'];
                 $phone = $studentRequest['telefono'];
                 $groupNumber = $studentRequest['grupo'];
@@ -117,16 +125,13 @@ class StudentRegistrationController extends Controller
                 $this->createStudent($name, $phone, $groupNumber, $enrollment, $curp);
             }
 
-            // Si todo va bien, commit de la transacción
             DB::commit();
 
             return Response::json([
                 'message' => 'Estudiantes registrados correctamente'
             ], 200);
         } catch (\Exception $e) {
-            // Si ocurre un error, rollback de la transacción
             DB::rollBack();
-            Log::channel('daily')->error('Error al crear los estudiantes: ' . $e->getMessage());
             return Response::json([
                 'message' => 'Error al crear los estudiantes: ' . $e->getMessage()
             ], 400);

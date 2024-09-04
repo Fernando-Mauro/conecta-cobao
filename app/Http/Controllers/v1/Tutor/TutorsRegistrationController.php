@@ -27,7 +27,12 @@ class TutorsRegistrationController extends Controller
     public function createTutor($name, $phone, $campusId, $email, $password, $curp, $telegram)
     {
         try {
-
+            $name = strtoupper(trim(strtr($name, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U'])));
+            $phone = preg_replace('/\s+/', '', $phone);
+            $email = preg_replace('/\s+/', '', $email);
+            $password = trim($password);
+            $curp = strtoupper(preg_replace('/\s+/', '', $curp));
+            
             $user = User::where('email', $email)
                 ->orWhere('name', $name)
                 ->first();
@@ -88,14 +93,7 @@ class TutorsRegistrationController extends Controller
             'phone' => 'required|string',
             'email' => 'required|string',
             'password' => 'required|string',
-            'curp' => [
-                'required',
-                function ($attribute, $value, $fail) {
-                    if (!$this->isValidCurp($value)) {
-                        $fail($attribute . ' es inválido.');
-                    }
-                }
-            ]
+            'curp' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -150,7 +148,6 @@ class TutorsRegistrationController extends Controller
                 Log::channel('daily')->debug('intentando generar tutores');
                 $name = $tutorRequest['nombre'];
                 $phone = $tutorRequest['telefono'];
-                // $campusNumber = $tutorRequest['plantel'];
                 $email = $tutorRequest['email'];
                 $password = $tutorRequest['contraseña'];
                 $curp = $tutorRequest['curp'];
