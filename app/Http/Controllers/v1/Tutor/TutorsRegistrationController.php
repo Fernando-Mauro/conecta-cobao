@@ -33,6 +33,9 @@ class TutorsRegistrationController extends Controller
             $password = trim($password);
             $curp = strtoupper(preg_replace('/\s+/', '', $curp));
             
+            if($name == 'NULL')
+                return;
+            
             $user = User::where('email', $email)
                 ->orWhere('name', $name)
                 ->first();
@@ -130,9 +133,7 @@ class TutorsRegistrationController extends Controller
             '*.telefono' => 'required|string',
             '*.email' => 'required|string',
             '*.contraseña' => 'required|string',
-            '*.curp' => [
-                'required'
-            ]
+            '*.curp' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -151,8 +152,8 @@ class TutorsRegistrationController extends Controller
                 $email = $tutorRequest['email'];
                 $password = $tutorRequest['contraseña'];
                 $curp = $tutorRequest['curp'];
-                $telegram = $tutorRequest['telegram'];
-                $this->createTutor($name, $phone, $campusId, $email, $password, $curp, $telegram);
+
+                $this->createTutor($name, $phone, $campusId, $email, $password, $curp, 0);
             }
 
             return Response::json([
