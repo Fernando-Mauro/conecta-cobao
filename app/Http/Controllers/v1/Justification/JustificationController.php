@@ -23,11 +23,11 @@ class JustificationController extends Controller
     public function postJustification(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'start' => 'required|date',
-            'end' => 'required|date',
-            'enrollment' => 'required|string',
-            'office' => 'required|mimes:jpeg,png,jpg',
-            'recipe' => 'required|mimes:jpeg,png,jpg',
+            'startDate' => 'required|date',
+            'endDate' => 'required|date',
+            'curp' => 'required|string',
+            'oficio' => 'required|mimes:jpeg,png,jpg',
+            'receta' => 'required|mimes:jpeg,png,jpg',
             'ine' => 'required|mimes:jpeg,png,jpg',
         ]);
 
@@ -35,13 +35,12 @@ class JustificationController extends Controller
             return Response::json(['message' => 'Formato de datos invalidos'], 400);
         }
 
-        if(!$this->isValidEnrollment($request->input('enrollment'))){
-            return Response::json(['message' => 'Matricula invalida'], 400);
+        if(!$this->isValidCurp($request->input('curp'))){
+            return Response::json(['message' => 'Curp invalida'], 400);
         }
-
         // Obtén los archivos de las imágenes
-        $office = $request->file('office');
-        $recipe = $request->file('recipe');
+        $office = $request->file('oficio');
+        $recipe = $request->file('receta');
         $ine = $request->file('ine');
 
         $officeName = time() . '_' . $office->getClientOriginalName();
@@ -61,9 +60,12 @@ class JustificationController extends Controller
 
         $userId = Auth::id();
         $tutor = Tutor::where('user_id', $userId)->first();
-
-        // Obtener el estudiante por su matrícula o curp
-        $student = Student::where('enrollment', $request->input('enrollment'))->first();
+        
+        if(!$tutor){
+            return Response::json(['message' => 'No se encontró el tutor'], 404);
+        }
+        // Obtener el estudiante por su curp
+        $student = Student::where('curp', $request->input('curp'))->first();
 
         if (!$student) {
             return Response::json(['error' => 'No se encontró al estudiante'], 404);
@@ -75,18 +77,18 @@ class JustificationController extends Controller
             return Response::json(['message' => 'No tienes permiso para acceder a estos datos'], 403);
         }
 
-        Justification::create([
+        $justification = Justification::create([
             'student_id' => $student->id,
             'files_names' => $fileNames,
             'tutor_id' => $tutor->id,
-            'start_date' => $request->input('start'),
-            'end_date' => $request->input('end'),
+            'start_date' => $request->input('startDate'),
+            'end_date' => $request->input('endDate'),
             'campus_id' => $tutor->campus_id,
             'active' => true,
             'approved' => null,
         ]);
 
-        return Response::json(['success' => true], 200);
+        return Response::json(['message' => 'Justificante creado exitosamente', 'id' => $justification->id ], 200);
     }
 
 

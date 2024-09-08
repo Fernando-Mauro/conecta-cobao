@@ -19,8 +19,6 @@ return new class extends Migration
 
             $table->unsignedBigInteger('student_id');
             $table->foreign('student_id')->references('id')->on('students');
-            
-            $table->string('document_url');
 
             $table->date('start_date');
             $table->date('end_date');
