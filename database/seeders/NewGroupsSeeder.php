@@ -8,7 +8,7 @@ use App\Models\Level;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class GroupsSeeder extends Seeder
+class NewGroupsSeeder extends Seeder
 {
     /**
      * Run the database seeds.
