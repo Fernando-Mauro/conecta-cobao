@@ -10,13 +10,13 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Log;
 use JWTAuth;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use App\Models\Admin;
 use App\Models\Tutor;
 use App\Models\Teacher;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -54,6 +54,16 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:255',
+            'password' => 'required|string',
+        ]);
+        if($validator->fails()){
+            return Response::json([
+                'message' => "Se necesitan credenciales"
+            ], 400);
+        }
+        
         $credentials = $request->only('email', 'password');
         try {
             if (!$token = JWTAuth::attempt($credentials)) {
@@ -64,11 +74,13 @@ class AuthController extends Controller
         }
         
         $user = Auth::user();
-
+        
         $role = $user->roles;
-
+        
         $expirationTimeInMinutes = 30 * 24 * 60;
         $cookie = cookie('jwt', $token, $expirationTimeInMinutes);
+        Log::info("cookie: ", [$cookie]);
+        
         return response()
             ->json(['message' => 'success', 'role' => $role[0]->name])
             ->withCookie($cookie);
@@ -129,6 +141,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $cookie = Cookie::forget('jwt');
+
         return response([
             'message' => 'sucess'
         ])->withCookie($cookie);
@@ -161,4 +174,25 @@ class AuthController extends Controller
             return Response::json(['message' => 'No se encontró el usuario'], 404);
         }
     }
+
+    public function validateToken(Request $request)
+    {   
+        try{
+            if (Auth::check()) {
+                $user = Auth::user();
+                $role = $user->roles;
+
+                return Response::json([
+                    'role' => $role[0]->name
+                ], 200);
+            } else {
+                Log::info($request);
+                return Response::json(['message' => 'No se pudo autenticar al usuario'], 401);
+            }
+        }catch (\Exception $e) {
+            // manejo de errores
+            return Response::json(['message' => 'Ocurrió un error al autenticar el usuario'], 500);
+        }
+    }
+
 }

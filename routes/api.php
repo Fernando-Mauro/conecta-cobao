@@ -110,6 +110,7 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::middleware('jwt.verify')->group(function () {
+            Route::get('validate', 'App\Http\Controllers\v1\Auth\AuthController@validateToken');
             Route::post('resetPassword', 'App\Http\Controllers\v1\Auth\AuthController@resetPassword');
         });
 

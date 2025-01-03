@@ -6,6 +6,7 @@ use Closure;
 use Exception;
 use JWTAuth;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Log;
 
 class JwtMiddleware
 {
@@ -13,7 +14,7 @@ class JwtMiddleware
     {
         // Intenta obtener el token desde la cookie
         $token = Cookie::get('jwt');
-
+        Log::info("La cookie del request:", ['cookie' => $token]);
         if (!$token) {
             // Si no hay token en la cookie, intenta obtenerlo de la cabecera Authorization
             $token = $request->header('Authorization');
@@ -29,11 +30,11 @@ class JwtMiddleware
         } catch (Exception $e) {
             // Maneja las excepciones relacionadas con el token
             if ($e instanceof \Tymon\JWTAuth\Exceptions\TokenInvalidException) {
-                return response()->json(['status' => 'Token is Invalid']);
+                return response()->json(['status' => 'Token is Invalid'], 401);
             } else if ($e instanceof \Tymon\JWTAuth\Exceptions\TokenExpiredException) {
                 return response()->json(['status' => 'Token is Expired'], 403);
             } else {
-                return response()->json(['status' => 'Authorization Token not found']);
+                return response()->json(['status' => 'Authorization Token not found'], 401);
             }
         }
 
