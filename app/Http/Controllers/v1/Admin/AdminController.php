@@ -163,4 +163,26 @@ class AdminController extends Controller
 
         return Response::json($groupsFilter, 200);
     }
+
+    public function getGroupsByLevelId($levelId)
+    {
+        $userId = Auth::id();
+
+        if (!$userId) {
+            return Response::json(['message' => 'No se encuentra autenticado']);
+        }
+
+        $admin = Admin::where('user_id', $userId)->first();
+        $teacher = Teacher::where('user_id', $userId)->first();
+
+        if ($admin) {
+            $groups = Group::where('campus_id', $admin->campus_id)->where('level_id', $levelId)->get();
+        } elseif ($teacher) {
+            $groups = Group::where('campus_id', $teacher->campus_id)->where('level_id', $levelId)->get();
+        } else {
+            return Response::json(['message' => 'El usuario no es ni administrador ni profesor']);
+        }
+
+        return Response::json($groups, 200);
+    }
 }

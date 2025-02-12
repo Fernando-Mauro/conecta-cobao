@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
-use PHPUnit\Framework\Attributes\Group;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
 /*
@@ -47,6 +46,8 @@ Route::prefix('v1')->group(function () {
         });
         Route::middleware('jwt.verify', 'role:admin,teacher')->group(function () {
             Route::get('/getGroupsBySemester/{semester}', 'App\Http\Controllers\v1\Admin\AdminController@getGroups');
+            Route::get('/getGroupsByLevelId/{levelId}', 'App\Http\Controllers\v1\Admin\AdminController@getGroupsByLevelId');
+            
         });
     });
 
@@ -168,6 +169,13 @@ Route::prefix('v1')->group(function () {
         Route::get('levels/{level}/subjects', [\App\Http\Controllers\v1\Level\LevelController::class, 'getSubjects']);
         Route::get('levels/{level}/groups', [\App\Http\Controllers\v1\Level\LevelController::class, 'getGroups']);
     });    
+
+    Route::middleware(['jwt.verify', 'role:admin'])->group(function () {
+        Route::prefix('levels')->group(function () {
+            Route::get('levels', 'App\Http\Controllers\v1\Level\LevelController@getLevels');
+            // Route::get('/{level}/groups', 'App\Http\Controllers\v1\Level\LevelController@getGroups');
+        });
+    });
 
     Route::middleware(['jwt.verify', 'role:admin'])->group(function(){
         require __DIR__ . '/apiRoutes/users.php';
