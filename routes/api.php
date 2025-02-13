@@ -180,4 +180,10 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['jwt.verify', 'role:admin'])->group(function(){
         require __DIR__ . '/apiRoutes/users.php';
     });
+
+    Route::middleware(['jwt.verify', 'role:admin'])->group(function(){
+        Route::prefix("migrations")->group(function(){
+            Route::post('semesters', 'App\Http\Controllers\v1\Migrations\MigrationController@runSemesterMigration');
+        });
+    });
 });
