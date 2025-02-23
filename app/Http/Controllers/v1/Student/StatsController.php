@@ -29,12 +29,21 @@ class StatsController extends Controller
 
         $date = Carbon::parse($request->date)->format('Y-m-d');
 
-        $count = DB::table('student_check_in')
+        $check_ins = DB::table('student_check_in')
             ->join('students', 'students.id', '=', 'student_check_in.student_id')
             ->where('students.campus_id', $campusId)
             ->whereDate('student_check_in.created_at', $date)
             ->count();
 
-        return response()->json(['count' => $count], 200);
+        $check_outs = DB::table('student_check_out')
+            ->join('students', 'students.id', '=', 'student_check_out.student_id')
+            ->where('students.campus_id', $campusId)
+            ->whereDate('student_check_out.created_at', $date)
+            ->count();
+
+        return response()->json([
+            'check_ins' => $check_ins,
+            'check_outs' => $check_outs,
+        ], 200);
     }
 }
