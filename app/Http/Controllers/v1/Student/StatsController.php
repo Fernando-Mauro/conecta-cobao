@@ -35,10 +35,10 @@ class StatsController extends Controller
             ->whereDate('student_check_in.created_at', $date)
             ->count();
 
-        $check_outs = DB::table('student_check_out')
-            ->join('students', 'students.id', '=', 'student_check_out.student_id')
+        $check_outs = DB::table('student_check_outs')
+            ->join('students', 'students.id', '=', 'student_check_outs.student_id')
             ->where('students.campus_id', $campusId)
-            ->whereDate('student_check_out.created_at', $date)
+            ->whereDate('student_check_outs.created_at', $date)
             ->count();
 
         return response()->json([
