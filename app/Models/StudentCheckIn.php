@@ -15,4 +15,9 @@ class StudentCheckIn extends Model
     ];
 
     public $timestamps = true;
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'student_id', 'id');
+    }
 }

@@ -37,21 +37,19 @@ Route::prefix('v1')->group(function () {
             Route::get('/', 'App\Http\Controllers\v1\Admin\AdminController@getAllAdmins');
             Route::post('/massiveMessage', 'App\Http\Controllers\v1\Admin\AdminController@sendMassiveMessages');
             // Get, edit and delete admin
-            Route::prefix('/{id}')->group(function(){
+            Route::prefix('/{id}')->group(function () {
                 Route::get('/', 'App\Http\Controllers\v1\Admin\AdminController@getAdminById');
                 Route::patch('/', 'App\Http\Controllers\v1\Admin\AdminController@editAdminById');
                 Route::delete('/', 'App\Http\Controllers\v1\Admin\AdminController@deleteAdminById');
             });
-            
         });
         Route::middleware('jwt.verify', 'role:admin,teacher')->group(function () {
             Route::get('/getGroupsBySemester/{semester}', 'App\Http\Controllers\v1\Admin\AdminController@getGroups');
             Route::get('/getGroupsByLevelId/{levelId}', 'App\Http\Controllers\v1\Admin\AdminController@getGroupsByLevelId');
-            
         });
     });
 
-    Route::middleware(['jwt.verify', 'role:admin'])->group(function(){
+    Route::middleware(['jwt.verify', 'role:admin'])->group(function () {
         Route::get('/allusers', 'App\Http\Controllers\v1\Admin\AdminController@getAllUsers');
     });
 
@@ -77,19 +75,19 @@ Route::prefix('v1')->group(function () {
         Route::middleware(['jwt.verify', 'role:tutor,admin,teacher'])->group(function () {
             Route::get('{id}', 'App\Http\Controllers\v1\Student\StudentController@getStudentById');
         });
-        
+
         Route::middleware(['jwt.verify', 'role:teacher,admin'])->group(function () {
-            Route::get('/{id}/lastCheckIn','App\Http\Controllers\v1\Student\StudentController@getLasCheckInById' );
+            Route::get('/{id}/lastCheckIn', 'App\Http\Controllers\v1\Student\StudentController@getLasCheckInById');
             Route::get('/group/{group}', 'App\Http\Controllers\v1\Student\StudentController@getStudentsByGroup');
         });
-        
-        Route::middleware('jwt.verify','role:admin')->group(function(){
+
+        Route::middleware('jwt.verify', 'role:admin')->group(function () {
             Route::get('{enrollment}/checksByPeriod', 'App\Http\Controllers\v1\Student\StudentController@getChecksByPeriod');
             Route::get('{identifier}/register_check', 'App\Http\Controllers\v1\Student\StudentCheckController@registerStudentCheck');
-        });    
+        });
     });
-    
-    Route::prefix('/checks')->group(function(){
+
+    Route::prefix('/checks')->group(function () {
         Route::middleware(['jwt.verify', 'role:tutor'])->group(function () {
             Route::get('/', 'App\Http\Controllers\v1\Student\StudentController@checksByTutor');
         });
@@ -101,7 +99,7 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('/auth')->group(function () {
         Route::post('login', 'App\Http\Controllers\v1\Auth\AuthController@login');
-        
+
         Route::middleware('jwt.verify', 'role:admin')->group(function () {
             Route::post('register', 'App\Http\Controllers\v1\Auth\AuthController@register');
         });
@@ -114,7 +112,6 @@ Route::prefix('v1')->group(function () {
             Route::get('validate', 'App\Http\Controllers\v1\Auth\AuthController@validateToken');
             Route::post('resetPassword', 'App\Http\Controllers\v1\Auth\AuthController@resetPassword');
         });
-
     });
 
     Route::prefix('/justifications')->group(function () {
@@ -122,7 +119,7 @@ Route::prefix('v1')->group(function () {
         Route::middleware('jwt.verify', 'role:tutor')->group(function () {
             Route::post('/', 'App\Http\Controllers\v1\Justification\JustificationController@postJustification');
         });
-        
+
         // Route::get('/media/{fileName}', 'App\Http\Controllers\v1\Justification\JustificationController@getJustificationFile');
         Route::middleware(['jwt.verify', 'role:admin'])->group(function () {
             Route::get('/', 'App\Http\Controllers\v1\Justification\JustificationController@getJustifications');
@@ -162,13 +159,13 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}', 'App\Http\Controllers\v1\Tutor\DeleteTutorController@deleteTutorById');
         });
     });
-    
+
     Route::middleware(['jwt.verify', 'role:admin'])->group(function () {
         Route::apiResource('subjects', \App\Http\Controllers\v1\Subject\SubjectController::class);
         Route::apiResource('levels', \App\Http\Controllers\v1\Level\LevelController::class);
         Route::get('levels/{level}/subjects', [\App\Http\Controllers\v1\Level\LevelController::class, 'getSubjects']);
         Route::get('levels/{level}/groups', [\App\Http\Controllers\v1\Level\LevelController::class, 'getGroups']);
-    });    
+    });
 
     Route::middleware(['jwt.verify', 'role:admin'])->group(function () {
         Route::prefix('levels')->group(function () {
@@ -177,13 +174,25 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    Route::middleware(['jwt.verify', 'role:admin'])->group(function(){
+    Route::middleware(['jwt.verify', 'role:admin'])->group(function () {
         require __DIR__ . '/apiRoutes/users.php';
     });
 
-    Route::middleware(['jwt.verify', 'role:admin'])->group(function(){
-        Route::prefix("migrations")->group(function(){
+    Route::middleware(['jwt.verify', 'role:admin'])->group(function () {
+        Route::prefix("migrations")->group(function () {
             Route::post('semesters', 'App\Http\Controllers\v1\Migrations\MigrationController@runSemesterMigration');
+        });
+    });
+
+    Route::middleware(['jwt.verify', 'role:admin'])->group(function () {
+        Route::prefix('stats')->group(function () {
+            Route::prefix('students')->group(function () {
+                // TODO:
+                // Route::get('byGroup', 'App\Http\Controllers\v1\Stats\StatsController@getStudentsByGroup');
+                // Route::get('byLevel', 'App\Http\Controllers\v1\Stats\StatsController@getStudentsByLevel');
+                // Route::get('bySemester', 'App\Http\Controllers\v1\Stats\StatsController@getStudentsBySemester');
+                Route::get('byCampus', 'App\Http\Controllers\v1\Student\StatsController@getStatsByCampus');
+            });
         });
     });
 });
