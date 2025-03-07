@@ -120,7 +120,7 @@ class TelegramController extends Controller
     private function handleTutorRegistration($conversation, $chatId, $password)
     {
 
-        $student = Student::where('enrollment', $conversation->identifier)->orWhere($conversation->identifier, 'curp')->first();
+        $student = Student::where('enrollment', $conversation->identifier)->orWhere("curp", $conversation->identifier)->first();
         if (!$student) {
             Telegram::sendMessage([
                 'chat_id' => $chatId,
