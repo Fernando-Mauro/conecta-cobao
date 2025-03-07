@@ -76,7 +76,7 @@ class TutorCommand extends Command
 
         Telegram::sendMessage([
             'chat_id' => $chatId,
-            'text' => 'Por favor escribe la matrícula del estudiante',
+            'text' => 'Por favor escribe la matrícula del estudiante o su curp',
         ]);
     }
 
@@ -87,7 +87,7 @@ class TutorCommand extends Command
 
         Telegram::sendMessage([
             'chat_id' => $update->getMessage()->getChat()->getId(),
-            'text' => 'Por favor escribe la matrícula del estudiante',
+            'text' => 'Por favor escribe la matrícula del estudiante o su curp',
         ]);
     }
 }

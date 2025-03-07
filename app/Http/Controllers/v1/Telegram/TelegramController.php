@@ -12,7 +12,6 @@ use App\Models\TutorStudent;
 use App\Models\User;
 use App\Traits\StudentTrait;
 use App\Traits\TeacherTrait;
-use Illuminate\Support\Facades\Log;
 use Telegram\Bot\Laravel\Facades\Telegram;
 use JWTAuth;
 
@@ -27,7 +26,6 @@ class TelegramController extends Controller
         $update = Telegram::getWebhookUpdates();
         $chatId = $update->getMessage()->getChat()->getId();
 
-        // Busca el estado actual en la base de datos
         $conversation = ConversationStatus::where('chat_id', $chatId)->first();
 
         if (!$conversation || $update->hasCommand()) {
@@ -72,8 +70,8 @@ class TelegramController extends Controller
             return;
         }
 
-        if ($type_user == 'tutor' && !$this->isValidEnrollment($identifier)) {
-            $message = 'La matrícula proporcionada no es válida 😅' . "\n" . 'Ingresa de nuevo la matrícula.';
+        if ($type_user == 'tutor' && !($this->isValidEnrollment($identifier) || $this->isValidCurp($identifier))) {
+            $message = 'La matrícula o curp proporcionada no es válida 😅' . "\n" . 'Ingresa de nuevo la matrícula o curp.';
 
             Telegram::sendMessage([
                 'chat_id' => $chatId,
@@ -121,14 +119,15 @@ class TelegramController extends Controller
 
     private function handleTutorRegistration($conversation, $chatId, $password)
     {
-        // TODO: Revisar si al finalizar el registro hay que borrar el conversation status
 
         $student = Student::where('enrollment', $conversation->identifier)->first();
         if (!$student) {
             Telegram::sendMessage([
                 'chat_id' => $chatId,
-                'text' => 'No se encontró ningún estudiante con la matrícula proporcionada.'
+                'text' => 'No se encontró ningún estudiante con la matrícula proporcionada. Por favor intenta de nuevo o escribe su curp.'
             ]);
+            $conversation->identifier = null;
+            $this->setConversationStatus($chatId, 'registro');
             return;
         }
 
@@ -238,6 +237,7 @@ class TelegramController extends Controller
         $student = Student::where('enrollment', $identifier)->first();
         
         if(!$student){
+
             Telegram::sendMessage([
                 'chat_id' => $chatId,
                 'text' => 'No se encontró ningún estudiante con la matrícula proporcionada.'
