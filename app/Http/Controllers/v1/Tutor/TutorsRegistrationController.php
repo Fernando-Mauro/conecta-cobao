@@ -72,7 +72,7 @@ class TutorsRegistrationController extends Controller
                     'password' => Hash::make($password)
                 ]);
                 $role = Role::where('name', 'tutor')->first();
-                $user->assignRole($role);
+                $user->assignRole($role, "api");
             }
 
             // Validar que no se intente crear el tutor duplicado (por teléfono o vinculación con el usuario)
