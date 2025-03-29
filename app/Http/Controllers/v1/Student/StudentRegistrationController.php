@@ -31,8 +31,8 @@ class StudentRegistrationController extends Controller
         $enrollment = preg_replace('/\s+/', '', $enrollment);
         $curp = strtoupper(preg_replace('/\s+/', '', $curp));
         
-        // If the enrollment is -1, it means that the student does not have an enrollment
-        if($enrollment != '-1' && !$this->isValidEnrollment($enrollment)) {
+        // If the enrollment is empty, it means that the student does not have an enrollment
+        if($enrollment != '' && !$this->isValidEnrollment($enrollment)) {
             throw new \Exception('Matricula invalida'.$enrollment);
         }
 
@@ -43,11 +43,17 @@ class StudentRegistrationController extends Controller
         $admin = Auth::user();
         $campusId = Admin::where('user_id', $admin->id)->first()->campus_id;
 
-        $groupId = Group::where('name', $groupNumber)->where('campus_id', $campusId)->first()->id;
+        $group = Group::where('name', $groupNumber)->where('campus_id', $campusId)->first();
+
+        if (!$group) {
+            throw new \Exception('Grupo no existe');
+        }
+
+        $groupId = $group->id;
 
         $user = User::create([
             'name' => $name,
-            'email' => ($enrollment == '-1') ? $curp : $enrollment,
+            'email' => (!$enrollment) ? $curp : $enrollment,
             'password' => Hash::make($curp),
         ]);
 
@@ -55,7 +61,7 @@ class StudentRegistrationController extends Controller
             'phone' => $phone,
             'group_id' => $groupId,
             'campus_id' => $campusId,
-            'enrollment' => ($enrollment == '-1') ? NULL : $enrollment,
+            'enrollment' => (!$enrollment) ? NULL : $enrollment,
             'curp' => $curp,
             'user_id' => $user->id
         ]);
@@ -68,7 +74,6 @@ class StudentRegistrationController extends Controller
             'name' => 'required|string',
             'phone' => 'required|string',
             'group' => 'required|integer',
-            'enrollment' => 'required|string',
             'curp' => 'required|string',
         ]);
 
@@ -76,7 +81,7 @@ class StudentRegistrationController extends Controller
             return Response::json(["message" => 'Error en el formato de los datos'], 400);
         }
 
-        if (!$this->isValidEnrollment($request->input('enrollment'))) {
+        if ($request->input('enrollment') != '' && !$this->isValidEnrollment($request->input('enrollment'))) {
             return Response::json(["message" => "Matricula invalida"], 400);
         }
 
