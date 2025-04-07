@@ -27,14 +27,6 @@ class StudentEditController extends Controller
                     }
                 }
             ],
-            'enrollment' => [
-                'required',
-                function ($attribute, $value, $fail) {
-                    if (!$this->isValidEnrollment($value)) {
-                        $fail($attribute . ' es invalido.');
-                    }
-                }
-            ],
             'group' => 'required|integer',
             'phone' => 'required|string',
             'tutor_name' => 'required|string',
