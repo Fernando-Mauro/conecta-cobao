@@ -12,6 +12,7 @@ use App\Models\TutorStudent;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 
@@ -19,7 +20,13 @@ class TutorController extends Controller
 {
     public function getTutorById($id)
     {
-        $tutor = Tutor::where('id', $id)->select('phone', 'user_id')->first();
+        $tutor = Tutor::where('id', $id)->select('phone', 'user_id', 'telegram_chat_id')->first();
+
+        $tutorStudents = TutorStudent::where('tutor_id', $id)->select('student_id')->get();
+
+        $students = Student::whereIn('id', $tutorStudents->pluck('student_id'))
+                ->select('enrollment', 'id')
+                ->get();
         
         if (!$tutor) {
             return Response::json(['message' => 'Tutor no encontrado']);
@@ -35,6 +42,8 @@ class TutorController extends Controller
             'name' => $user->name,
             'phone' => $tutor->phone,
             'email' => $user->email,
+            'telegram_chat_id' => $tutor->telegram_chat_id,
+            'students' => $students,
         ], 200);
     }
 
@@ -79,7 +88,7 @@ class TutorController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'phone' => 'required|string',
-            'email' => 'required|string'
+            'email' => 'required|string',
         ]);
         
         if($validator->fails()){
@@ -102,5 +111,21 @@ class TutorController extends Controller
 
         $user->update($request->only('email', 'name'));
         return Response::json(['message' => 'Tutor actualizado correctamente'], 200);
+    }
+    public function resetPassword($id, Request $request){
+        $tutor = Tutor::where('id', $id)->first();
+        
+        if (!$tutor) {
+            return Response::json(['message' => 'Tutor no encontrado'], 404);
+        }
+
+        $user = User::where('id', $tutor->user_id)->first();
+        
+        if (!$user) {
+            return Response::json(['message' => 'Usuario no encontrado'], 404);
+        } 
+
+        $user->update(['password' => Hash::make($request->input('password'))]);
+        return Response::json(['message' => 'Contraseña actualizada correctamente'], 200);
     }
 }
