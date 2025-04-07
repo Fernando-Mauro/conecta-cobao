@@ -156,6 +156,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/group/{group}', 'App\Http\Controllers\v1\Tutor\TutorController@getTutorsByGroup');
             Route::get('/{id}', 'App\Http\Controllers\v1\Tutor\TutorController@getTutorById');
             Route::patch('/{id}', 'App\Http\Controllers\v1\Tutor\TutorController@editTutorById');
+            Route::patch('/{id}/reset-password', 'App\Http\Controllers\v1\Tutor\TutorController@resetPassword');
             Route::delete('/{id}', 'App\Http\Controllers\v1\Tutor\DeleteTutorController@deleteTutorById');
         });
     });
