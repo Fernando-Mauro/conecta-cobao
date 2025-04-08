@@ -128,4 +128,14 @@ class TutorController extends Controller
         $user->update(['password' => Hash::make($request->input('password'))]);
         return Response::json(['message' => 'Contraseña actualizada correctamente'], 200);
     }
+    public function resetTelegram($id, Request $request){
+        $tutor = Tutor::where('id', $id)->first();
+        
+        if (!$tutor) {
+            return Response::json(['message' => 'Tutor no encontrado'], 404);
+        }
+
+        $tutor->update(['telegram_chat_id' => null]);
+        return Response::json(['message' => 'Telegram actualizado correctamente'], 200);
+    }
 }
