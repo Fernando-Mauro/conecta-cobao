@@ -15,7 +15,7 @@ class LevelController extends Controller
     {
         $user = Auth::user();
 
-        $admin = Admin::find($user->id);
+        $admin = Admin::where("user_id", $user->id)->first();
 
         if (!$admin) {
             return response()->json([
