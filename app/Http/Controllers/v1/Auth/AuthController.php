@@ -80,7 +80,6 @@ class AuthController extends Controller
         
         $expirationTimeInMinutes = 30 * 24 * 60;
         $cookie = cookie('jwt', $token, $expirationTimeInMinutes);
-        Log::info("cookie: ", [$cookie]);
         
         return response()
             ->json(['message' => 'success', 'role' => $role[0]->name])
@@ -187,7 +186,6 @@ class AuthController extends Controller
                     'role' => $role[0]->name
                 ], 200);
             } else {
-                Log::info($request);
                 return Response::json(['message' => 'No se pudo autenticar al usuario'], 401);
             }
         }catch (\Exception $e) {

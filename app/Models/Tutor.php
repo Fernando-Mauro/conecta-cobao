@@ -29,7 +29,7 @@ class Tutor extends Model
 
     public function activeStudents(): BelongsToMany
     {
-        return $this->belongsToMany(Student::class, TutorStudent::class, 'tutor_id', 'student_id')->where('students.active', true);
+        return $this->belongsToMany(Student::class, 'tutor_students', 'tutor_id', 'student_id')->where('students.active', true);
     }
     public function user(): BelongsTo
     {

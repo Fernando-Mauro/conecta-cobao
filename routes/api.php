@@ -78,7 +78,10 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware(['jwt.verify', 'role:teacher,admin'])->group(function () {
             Route::get('/{id}/lastCheckIn', 'App\Http\Controllers\v1\Student\StudentController@getLasCheckInById');
-            Route::get('/group/{group}', 'App\Http\Controllers\v1\Student\StudentController@getStudentsByGroup');
+        });
+
+        Route::middleware('jwt.verify', 'role:tutor,admin')->group(function () {
+            Route::get('/{enrollment}/checks', 'App\Http\Controllers\v1\Student\StudentController@getChecksByStudentEnrollment');
         });
 
         Route::middleware('jwt.verify', 'role:admin')->group(function () {
@@ -149,8 +152,11 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    Route::middleware('jwt.verify', 'role:admin')->group(function () {
-        Route::prefix('/tutors')->group(function () {
+    Route::prefix('/tutors')->group(function () {
+        Route::middleware('jwt.verify', 'role:tutor')->group(function () {
+            Route::get("students", 'App\Http\Controllers\v1\Tutor\TutorController@getStudentsByTutorId');
+        });
+        Route::middleware('jwt.verify', 'role:admin')->group(function () {
             Route::post('/', 'App\Http\Controllers\v1\Tutor\TutorsRegistrationController@registerTutor');
             Route::post('/massiveLoad', 'App\Http\Controllers\v1\Tutor\TutorsRegistrationController@registerTutors');
             Route::get('/group/{group}', 'App\Http\Controllers\v1\Tutor\TutorController@getTutorsByGroup');

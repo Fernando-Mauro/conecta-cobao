@@ -223,4 +223,10 @@ class StudentController extends Controller
         }
         return Response::json($lastCheckIn, 200);
     }
+
+    public function getChecksByStudentEnrollment($enrollment)
+    {
+       
+        return Response::json("ok", 200);
+    }
 }

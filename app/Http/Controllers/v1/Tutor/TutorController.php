@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 
@@ -25,9 +26,9 @@ class TutorController extends Controller
         $tutorStudents = TutorStudent::where('tutor_id', $id)->select('student_id')->get();
 
         $students = Student::whereIn('id', $tutorStudents->pluck('student_id'))
-                ->select('enrollment', 'id')
-                ->get();
-        
+            ->select('enrollment', 'id')
+            ->get();
+
         if (!$tutor) {
             return Response::json(['message' => 'Tutor no encontrado']);
         }
@@ -51,16 +52,16 @@ class TutorController extends Controller
     public function getTutorsByGroup($group)
     {
         $user = Auth::user();
-        
+
         $admin = Admin::where('user_id', $user->id)->first();
         $group = Group::where('id', $group)->where('campus_id', $admin->campus_id)->first();
 
         $response = [];
-        if($group){
+        if ($group) {
             $students = Student::where('group_id', $group->id)->select('id')->get();
             $tutorIds = TutorStudent::whereIn('student_id', $students->pluck('id'))->select('tutor_id')->distinct()->get();
-            $tutors = Tutor::whereIn('id', $tutorIds->pluck('tutor_id'))->select('id','phone', 'user_id')->get();
-            
+            $tutors = Tutor::whereIn('id', $tutorIds->pluck('tutor_id'))->select('id', 'phone', 'user_id')->get();
+
             // Get the names from de users
             foreach ($tutors as $tutor) {
                 $response[] = [
@@ -71,71 +72,90 @@ class TutorController extends Controller
             }
 
             $campus = Campus::where('id', $admin->campus_id)->select('campus_number')->first();
-            
+
             foreach ($tutors as $tutor) {
                 $tutor->campus = $campus->campus_number;
             }
-
-        }else{
+        } else {
             return 'No hay grupo';
         }
-    
+
         return Response::json($response);
     }
-    
 
-    public function editTutorById($id, Request $request){
+
+    public function editTutorById($id, Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'phone' => 'required|string',
             'email' => 'required|string',
         ]);
-        
-        if($validator->fails()){
+
+        if ($validator->fails()) {
             return Response::json(['message' => 'Error en el formato de datos'], 400);
         }
 
         $tutor = Tutor::where('id', $id)->first();
-        
+
         if (!$tutor) {
             return Response::json(['message' => 'Tutor no encontrado'], 404);
         }
 
-        $tutor->update($request->only( 'phone'));
-        
+        $tutor->update($request->only('phone'));
+
         $user = User::where('id', $tutor->user_id)->first();
-        
+
         if (!$user) {
             return Response::json(['message' => 'Usuario no encontrado'], 404);
-        } 
+        }
 
         $user->update($request->only('email', 'name'));
         return Response::json(['message' => 'Tutor actualizado correctamente'], 200);
     }
-    public function resetPassword($id, Request $request){
+    public function resetPassword($id, Request $request)
+    {
         $tutor = Tutor::where('id', $id)->first();
-        
+
         if (!$tutor) {
             return Response::json(['message' => 'Tutor no encontrado'], 404);
         }
 
         $user = User::where('id', $tutor->user_id)->first();
-        
+
         if (!$user) {
             return Response::json(['message' => 'Usuario no encontrado'], 404);
-        } 
+        }
 
         $user->update(['password' => Hash::make($request->input('password'))]);
         return Response::json(['message' => 'Contraseña actualizada correctamente'], 200);
     }
-    public function resetTelegram($id, Request $request){
+    public function resetTelegram($id, Request $request)
+    {
         $tutor = Tutor::where('id', $id)->first();
-        
+
         if (!$tutor) {
             return Response::json(['message' => 'Tutor no encontrado'], 404);
         }
 
         $tutor->update(['telegram_chat_id' => null]);
         return Response::json(['message' => 'Telegram actualizado correctamente'], 200);
+    }
+    public function getStudentsByTutorId()
+    {
+        $user = Auth::user();
+        $tutor = Tutor::where('user_id', $user->id)->first();
+
+        if (!$tutor) {
+            return Response::json(['message' => 'Tutor no encontrado'], 404);
+        }
+
+        $students = $tutor->activeStudents()->select('enrollment')->get();
+        
+        if ($students->isEmpty()) {
+            return Response::json(['message' => 'No hay estudiantes activos'], 404);
+        }
+
+        return Response::json($students, 200);
     }
 }
