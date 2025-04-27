@@ -14,7 +14,6 @@ class JwtMiddleware
     {
         // Intenta obtener el token desde la cookie
         $token = Cookie::get('jwt');
-        Log::info("La cookie del request:", ['cookie' => $token]);
         if (!$token) {
             // Si no hay token en la cookie, intenta obtenerlo de la cabecera Authorization
             $token = $request->header('Authorization');
