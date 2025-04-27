@@ -21,7 +21,7 @@ class DeleteTutorController extends Controller
         $tutorStudent = TutorStudent::where('tutor_id', $tutor->id)->first();
     
         if($tutorStudent){
-            return Response::json(['message' => 'Primero borra al alumno y después se podrá eliminar el tutor'], 400);
+            $tutorStudent->delete();
         }
         
         $tutor->delete();
