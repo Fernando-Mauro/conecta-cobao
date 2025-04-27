@@ -78,6 +78,7 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware(['jwt.verify', 'role:teacher,admin'])->group(function () {
             Route::get('/{id}/lastCheckIn', 'App\Http\Controllers\v1\Student\StudentController@getLasCheckInById');
+            Route::get('/group/{group}', 'App\Http\Controllers\v1\Student\StudentController@getStudentsByGroup');
         });
 
         Route::middleware('jwt.verify', 'role:tutor,admin')->group(function () {
