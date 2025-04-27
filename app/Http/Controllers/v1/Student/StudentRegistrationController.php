@@ -32,7 +32,7 @@ class StudentRegistrationController extends Controller
         $curp = strtoupper(preg_replace('/\s+/', '', $curp));
         
         // If the enrollment is empty, it means that the student does not have an enrollment
-        if($enrollment != '' && !$this->isValidEnrollment($enrollment)) {
+        if($enrollment && !$this->isValidEnrollment($enrollment)) {
             throw new \Exception('Matricula invalida'.$enrollment);
         }
 
@@ -110,7 +110,6 @@ class StudentRegistrationController extends Controller
             '*.nombre' => 'required|string',
             '*.telefono' => 'required|string',
             '*.grupo' => 'required|integer',
-            '*.matricula' => 'required',
             '*.curp' => 'required|string',
         ]);
 
